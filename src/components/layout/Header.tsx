@@ -8,6 +8,7 @@ import { MainSidebarNav } from './MainSidebarNav';
 import { AppLogo } from '../icons';
 import type { User } from '@supabase/supabase-js';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { useState, useEffect } from 'react';
 import { Profile } from '@/lib/types';
 import { HeaderStats } from './HeaderStats';
@@ -178,72 +179,150 @@ export function Header({ user, profile, showStats = false }: { user: User, profi
       </div>
 
       <div className="flex items-center gap-2">
-         <Popover>
-            <PopoverTrigger asChild>
+         {/* Desktop/tablet: popover */}
+         <div className="hidden md:block">
+           <Popover>
+              <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="overflow-hidden rounded-full relative">
+                      <Bell className="h-5 w-5" />
+                      {hasNewNotification && (
+                        <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                        </span>
+                      )}
+                  </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-96 p-0">
+                  <div className="p-4 border-b flex justify-between items-center">
+                    <h4 className="font-medium leading-none">Notifications</h4>
+                     <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={handleMarkAllAsRead} 
+                        disabled={!hasNewNotification || isMarkingAsRead}
+                        className="text-xs text-muted-foreground hover:text-primary"
+                      >
+                        {isMarkingAsRead ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CheckCheck className="h-3 w-3 mr-1" />}
+                        Mark all as read
+                      </Button>
+                  </div>
+                  <div className="flex flex-col gap-1 p-2 max-h-[400px] overflow-y-auto">
+                      {isLoadingNotifications ? (
+                        <div className="flex items-center justify-center p-4">
+                          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : notifications.length > 0 ? (
+                        notifications.map(n => {
+                          const isUnread = lastReadTimestamp ? new Date(n.created_at) > new Date(lastReadTimestamp) : true;
+                          return (
+                            <div key={n.id} className={cn(
+                              "group relative flex items-start gap-3 p-3 rounded-lg transition-colors hover:bg-muted/50",
+                              isUnread ? "bg-primary/10" : ""
+                              )}>
+                              <div className="w-8 h-8 rounded-full bg-muted flex-shrink-0 flex items-center justify-center mt-1">
+                                  <Bell className="h-4 w-4 text-primary" />
+                              </div>
+                              <div className="flex-1">
+                                  <p className="font-semibold text-sm">{n.title}</p>
+                                  <p className="text-sm text-muted-foreground">{n.body}</p>
+                                  <p className="text-xs text-muted-foreground/70 mt-1">
+                                  {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                                  </p>
+                              </div>
+                              <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6 absolute top-2 right-2 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => handleDismissNotification(n.id)}
+                              >
+                                  <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )
+                         })
+                      ) : (
+                        <p className="text-sm text-muted-foreground text-center py-8">No notifications yet.</p>
+                      )}
+                  </div>
+              </PopoverContent>
+          </Popover>
+         </div>
+
+         {/* Mobile: fullscreen dialog */}
+         <div className="md:hidden">
+            <Dialog>
+              <DialogTrigger asChild>
                 <Button variant="ghost" size="icon" className="overflow-hidden rounded-full relative">
+                  <div className="relative">
                     <Bell className="h-5 w-5" />
                     {hasNewNotification && (
-                      <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
+                      <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
                       </span>
                     )}
+                  </div>
                 </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-96 p-0">
-                <div className="p-4 border-b flex justify-between items-center">
-                  <h4 className="font-medium leading-none">Notifications</h4>
-                   <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={handleMarkAllAsRead} 
-                      disabled={!hasNewNotification || isMarkingAsRead}
-                      className="text-xs text-muted-foreground hover:text-primary"
-                    >
-                      {isMarkingAsRead ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CheckCheck className="h-3 w-3 mr-1" />}
-                      Mark all as read
-                    </Button>
+              </DialogTrigger>
+              <DialogContent className="p-0 w-screen h-[100dvh] max-w-none bg-card flex flex-col">
+                <DialogHeader className="p-4 border-b">
+                  <DialogTitle>Notifications</DialogTitle>
+                  <DialogDescription className="sr-only">Your recent alerts</DialogDescription>
+                </DialogHeader>
+                <div className="p-2 flex justify-end">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleMarkAllAsRead} 
+                    disabled={!hasNewNotification || isMarkingAsRead}
+                    className="text-xs text-muted-foreground hover:text-primary"
+                  >
+                    {isMarkingAsRead ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CheckCheck className="h-3 w-3 mr-1" />}
+                    Mark all as read
+                  </Button>
                 </div>
-                <div className="flex flex-col gap-1 p-2 max-h-[400px] overflow-y-auto">
-                    {isLoadingNotifications ? (
-                      <div className="flex items-center justify-center p-4">
-                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                      </div>
-                    ) : notifications.length > 0 ? (
-                      notifications.map(n => {
-                        const isUnread = lastReadTimestamp ? new Date(n.created_at) > new Date(lastReadTimestamp) : true;
-                        return (
-                          <div key={n.id} className={cn(
-                            "group relative flex items-start gap-3 p-3 rounded-lg transition-colors hover:bg-muted/50",
-                            isUnread ? "bg-primary/10" : ""
-                            )}>
-                            <div className="w-8 h-8 rounded-full bg-muted flex-shrink-0 flex items-center justify-center mt-1">
-                                <Bell className="h-4 w-4 text-primary" />
-                            </div>
-                            <div className="flex-1">
-                                <p className="font-semibold text-sm">{n.title}</p>
-                                <p className="text-sm text-muted-foreground">{n.body}</p>
-                                <p className="text-xs text-muted-foreground/70 mt-1">
-                                {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
-                                </p>
-                            </div>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 absolute top-2 right-2 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => handleDismissNotification(n.id)}
-                            >
-                                <X className="h-4 w-4" />
-                            </Button>
+                <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                  {isLoadingNotifications ? (
+                    <div className="flex items-center justify-center p-4">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : notifications.length > 0 ? (
+                    notifications.map(n => {
+                      const isUnread = lastReadTimestamp ? new Date(n.created_at) > new Date(lastReadTimestamp) : true;
+                      return (
+                        <div key={n.id} className={cn(
+                          "group relative flex items-start gap-3 p-3 rounded-lg transition-colors bg-card hover:bg-muted/50 border",
+                          isUnread ? "border-primary/40" : "border-border"
+                        )}>
+                          <div className="w-8 h-8 rounded-full bg-muted flex-shrink-0 flex items-center justify-center mt-1">
+                            <Bell className="h-4 w-4 text-primary" />
                           </div>
-                        )
-                       })
-                    ) : (
-                      <p className="text-sm text-muted-foreground text-center py-8">No notifications yet.</p>
-                    )}
+                          <div className="flex-1">
+                            <p className="font-semibold text-sm">{n.title}</p>
+                            <p className="text-sm text-muted-foreground">{n.body}</p>
+                            <p className="text-xs text-muted-foreground/70 mt-1">
+                              {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 absolute top-2 right-2 text-muted-foreground"
+                            onClick={() => handleDismissNotification(n.id)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )
+                    })
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-8">No notifications yet.</p>
+                  )}
                 </div>
-            </PopoverContent>
-        </Popover>
+              </DialogContent>
+            </Dialog>
+         </div>
 
         <UserMenuSheet user={user} profile={profile} />
       </div>

@@ -144,6 +144,15 @@ export async function getNotificationsForUser() {
         query.not('id', 'in', `(${dismissedIds.join(',')})`);
     }
     
+    // Show only notifications created after the user joined the app.
+    // This prevents newly registered users from seeing historical broadcasts.
+    if (user.created_at) {
+      try {
+        const joinedAt = new Date(user.created_at).toISOString();
+        query.gte('created_at', joinedAt);
+      } catch {}
+    }
+    
     const { data, error } = await query.limit(20);
     
     if (error) {

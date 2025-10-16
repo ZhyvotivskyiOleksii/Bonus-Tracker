@@ -1,5 +1,4 @@
 import { CasinoCard } from '@/components/dashboard/CasinoCard';
-import { MassOpenButton } from '@/components/dashboard/MassOpenButton';
 import { DailyTrackerHeader } from '@/components/dashboard/DailyTrackerHeader';
 import { CasinoStatus, type Casino, type UserCasino } from '@/lib/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -84,9 +83,7 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <DailyTrackerHeader casinos={casinos} userCasinos={userCasinos || []} />
 
-      <div className="flex justify-end">
-        <MassOpenButton casinos={casinos} userCasinos={userCasinos || []} />
-      </div>
+      {/* Mass open button removed by request */}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 min-h-0">
         {sortedCasinos.map(casino => {
