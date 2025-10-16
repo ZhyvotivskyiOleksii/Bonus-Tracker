@@ -174,9 +174,7 @@ export function Header({ user, profile, showStats = false }: { user: User, profi
                 <HeaderStats />
             </div>
         )}
-        {showStats && (
-          <HeaderMiniStats />
-        )}
+        {showStats && <HeaderMiniStats />}
       </div>
 
       <div className="flex items-center gap-2">

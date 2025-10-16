@@ -133,22 +133,28 @@ export function HeaderMiniStats() {
         visible ? "opacity-100 scale-100" : "opacity-0 scale-95"
       )}
     >
-      <div className="pointer-events-none flex flex-col items-center rounded-full bg-background/70 border border-border/60 px-3 py-1.5 shadow-md backdrop-blur-sm">
-        {/* Top: labels with icons + collected */}
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-1.5" title={`SC collected: ${scCollectedFmt}`}>
-            <ScCoinIcon className="h-3.5 w-3.5" />
-            <span className="text-[12px] font-semibold text-status-sc">{scCollectedFmt}</span>
+      <div className="pointer-events-none flex flex-col items-center rounded-full bg-background/70 border border-border/60 px-2 py-0.5 shadow-md backdrop-blur-sm max-w-[70%] whitespace-nowrap">
+        {/* Top: labels like desktop */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1" title="SC Collected">
+            <ScCoinIcon className="h-3 w-3" />
+            <span className="text-[9px] font-medium text-muted-foreground">SC Collected</span>
           </div>
-          <div className="flex items-center gap-1.5" title={`GC collected: ${formatNumber(gcCollected)}`}>
-            <GcCoinIcon className="h-3.5 w-3.5" />
-            <span className="text-[12px] font-semibold text-status-gc">{formatCompact(gcCollected)}</span>
+          <div className="flex items-center gap-1" title="GC Collected">
+            <GcCoinIcon className="h-3 w-3" />
+            <span className="text-[9px] font-medium text-muted-foreground">GC Collected</span>
           </div>
         </div>
-        {/* Bottom: amounts left */}
-        <div className="mt-0.5 flex items-center justify-center gap-10 text-[11px] text-muted-foreground">
-          <span>{scLeft.toFixed(2)}</span>
-          <span>{formatCompact(gcLeft)}</span>
+        {/* Bottom: collected / total (tighter spacing) */}
+        <div className="mt-0.5 flex items-center justify-center gap-4 text-[11px] tracking-tight">
+          <span className="inline-flex items-baseline">
+            <span className="font-semibold text-status-sc">{scCollectedFmt}</span>
+            <span className="text-muted-foreground ml-0.5">/{scTotalFmt}</span>
+          </span>
+          <span className="inline-flex items-baseline">
+            <span className="font-semibold text-status-gc">{formatNumber(gcCollected)}</span>
+            <span className="text-muted-foreground ml-0.5">/{formatNumber(gcTotal)}</span>
+          </span>
         </div>
       </div>
     </div>

@@ -279,34 +279,34 @@ export function UserMenuSheet({ user, profile }: { user: User, profile: Profile 
                         </AccordionContent>
                        </Card>
                     </AccordionItem>
-                     {isSupportedBrowser && (
-                      <AccordionItem value="item-2" className="border-none">
-                         <Card className="bg-background/50 overflow-hidden">
-                           <div className="p-4">
-                              <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3">
-                                      <div className="p-2 bg-primary/10 rounded-md">
-                                          <Bell className="h-5 w-5 text-primary" />
-                                      </div>
-                                      <div>
-                                          <p className="text-base font-semibold text-left">Push Notifications</p>
-                                          <p className="text-xs text-muted-foreground text-left">Enable or disable bonus alerts.</p>
-                                      </div>
+                 {isSupportedBrowser && (
+                   <AccordionItem value="item-2" className="border-none">
+                     <Card className="bg-background/50 overflow-hidden">
+                       <div className="p-4">
+                          <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                  <div className="p-2 bg-primary/10 rounded-md">
+                                      <Bell className="h-5 w-5 text-primary" />
                                   </div>
-                                  <Switch
-                                    checked={notificationsEnabled}
-                                    onCheckedChange={handleNotificationToggle}
-                                    disabled={isTogglingNotifications || notificationPermission === 'denied'}
-                                    aria-label="Toggle push notifications"
-                                  />
+                                  <div>
+                                      <p className="text-base font-semibold text-left">Push Notifications</p>
+                                      <p className="text-xs text-muted-foreground text-left">Enable or disable bonus alerts.</p>
+                                  </div>
                               </div>
-                              {notificationPermission === 'denied' && (
-                                <p className="text-xs text-destructive mt-2 text-center">You have blocked notifications. To enable them, you need to change your browser settings.</p>
-                              )}
-                           </div>
-                         </Card>
-                      </AccordionItem>
-                    )}
+                              <Switch
+                                checked={notificationsEnabled}
+                                onCheckedChange={handleNotificationToggle}
+                                disabled={isTogglingNotifications || notificationPermission === 'denied'}
+                                aria-label="Toggle push notifications"
+                              />
+                          </div>
+                          {notificationPermission === 'denied' && (
+                            <p className="text-xs text-destructive mt-2 text-center">You have blocked notifications. To enable them, you need to change your browser settings.</p>
+                          )}
+                       </div>
+                     </Card>
+                   </AccordionItem>
+                 )}
                 </Accordion>
             </div>
         )}
