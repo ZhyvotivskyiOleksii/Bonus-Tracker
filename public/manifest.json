@@ -1,0 +1,22 @@
+
+{
+  "name": "sweep-drop",
+  "short_name": "sweep-drop",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#1D4ED8",
+  "description": "Track your daily casino bonuses.",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

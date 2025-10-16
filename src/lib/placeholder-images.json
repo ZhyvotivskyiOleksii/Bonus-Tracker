@@ -1,0 +1,52 @@
+{
+  "placeholderImages": [
+    {
+      "id": "casino-1",
+      "description": "Logo for a casino brand",
+      "imageUrl": "https://images.unsplash.com/photo-1752306023412-c019704a62af?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxmb3J0dW5lJTIwY29pbnN8ZW58MHx8fHwxNzU5MjQ1OTEwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fortune coins"
+    },
+    {
+      "id": "casino-2",
+      "description": "Logo for a casino brand",
+      "imageUrl": "https://images.unsplash.com/photo-1630644964646-6cc8ac5b47ea?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cHVsc3olMjBsb2dvfGVufDB8fHx8MTc1OTI0NTkxMHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "pulsz logo"
+    },
+    {
+      "id": "casino-3",
+      "description": "Logo for a casino brand",
+      "imageUrl": "https://images.unsplash.com/photo-1682005337267-19dedb8d5afc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxjaHVtYmElMjBjYXNpbm98ZW58MHx8fHwxNzU5MjQ1OTA5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "chumba casino"
+    },
+    {
+      "id": "casino-4",
+      "description": "Logo for a casino brand",
+      "imageUrl": "https://images.unsplash.com/photo-1670085734312-9e8362003c52?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxsdWNreWxhbmQlMjBzbG90c3xlbnwwfHx8fDE3NTkyNDU5MTB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "luckyland slots"
+    },
+    {
+      "id": "casino-5",
+      "description": "Logo for a casino brand",
+      "imageUrl": "https://images.unsplash.com/photo-1561460432-fe047c1ba5a9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHx3b3clMjB2ZWdhc3xlbnwwfHx8fDE3NTkyNDU5MDl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "wow vegas"
+    },
+    {
+      "id": "casino-6",
+      "description": "Logo for a casino brand",
+      "imageUrl": "https://images.unsplash.com/photo-1663415833638-33e4202f3cda?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxzdGFrZSUyMHVzfGVufDB8fHx8MTc1OTI0NTkxMnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "stake us"
+    },
+    {
+      "id": "casino-7",
+      "description": "Logo for a casino brand",
+      "imageUrl": "https://images.unsplash.com/photo-1608342471881-b1485f090408?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtY2x1Y2slMjBjb218ZW58MHx8fHwxNzU5MjQ1OTEyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "mcluck com"
+    },
+    {
+      "id": "user-avatar",
+      "description": "User avatar",
+      "imageUrl": "https://images.unsplash.com/photo-1750535135645-005e250ff210?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxwZXJzb24lMjBhdmF0YXJ8ZW58MHx8fHwxNzU5MTcyNjAwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person avatar"
+    }
+  ]
+}

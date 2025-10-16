@@ -1,0 +1,254 @@
+'use client';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Menu, Bell, Loader2, CheckCheck, X } from 'lucide-react';
+import Link from 'next/link';
+import { MainSidebarNav } from './MainSidebarNav';
+import { AppLogo } from '../icons';
+import type { User } from '@supabase/supabase-js';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useState, useEffect } from 'react';
+import { Profile } from '@/lib/types';
+import { HeaderStats } from './HeaderStats';
+import { HeaderMiniStats } from './HeaderMiniStats';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
+import { UserMenuSheet } from '../settings/UserMenuSheet';
+import { getNotificationsForUser, markNotificationsAsRead, dismissNotification } from '@/lib/actions/notification-actions';
+import { formatDistanceToNow } from 'date-fns';
+import { createClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+
+type Notification = {
+  id: string;
+  created_at: string;
+  title: string;
+  body: string;
+  created_by: string | null;
+};
+
+export function Header({ user, profile, showStats = false }: { user: User, profile: Profile | null, showStats?: boolean }) {
+  const { toast } = useToast();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(true);
+  const [hasNewNotification, setHasNewNotification] = useState(false);
+  const [lastReadTimestamp, setLastReadTimestamp] = useState<string | null>(profile?.notifications_last_read_at || null);
+  const [isMarkingAsRead, setIsMarkingAsRead] = useState(false);
+  const isAdmin = profile?.role === 'site_manager_privilege';
+
+  const fetchUserNotifications = async () => {
+      const { notifications: fetchedNotifications } = await getNotificationsForUser();
+      setNotifications(fetchedNotifications);
+      setIsLoadingNotifications(false);
+  };
+  
+  useEffect(() => {
+    fetchUserNotifications();
+    
+    const supabase = createClient();
+    const channel = supabase
+      .channel('notifications')
+      .on<Notification>(
+        'postgres_changes', 
+        { event: 'INSERT', schema: 'public', table: 'notifications' }, 
+        (payload) => {
+           // We only add it if it's not already dismissed, which we can't know without a full refresh.
+           // A full refresh is simpler and ensures consistency.
+           fetchUserNotifications();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isLoadingNotifications) return;
+    const lastRead = lastReadTimestamp ? new Date(lastReadTimestamp) : new Date(0);
+    const hasUnread = notifications.some(n => new Date(n.created_at) > lastRead);
+    setHasNewNotification(hasUnread);
+
+    // If there are no notifications, there can't be new ones.
+    if (notifications.length === 0) {
+      setHasNewNotification(false);
+    }
+  }, [notifications, lastReadTimestamp, isLoadingNotifications]);
+
+
+  const getInitials = (email: string | undefined) => {
+    if (!email) return 'U';
+    return email.split('@')[0].substring(0, 2).toUpperCase();
+  }
+  
+  const handleMarkAllAsRead = async () => {
+    if (!hasNewNotification) return;
+    setIsMarkingAsRead(true);
+    const newTimestamp = new Date().toISOString();
+    const result = await markNotificationsAsRead(user.id);
+    if (result.success) {
+        setLastReadTimestamp(newTimestamp);
+        setHasNewNotification(false);
+    } else {
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Could not mark notifications as read.'
+        })
+    }
+    setIsMarkingAsRead(false);
+  }
+
+  const handleDismissNotification = async (notificationId: string) => {
+    // Optimistically update the UI
+    const remainingNotifications = notifications.filter(n => n.id !== notificationId);
+    setNotifications(remainingNotifications);
+
+    // After optimistic update, check if there are any unread notifications left
+    const lastRead = lastReadTimestamp ? new Date(lastReadTimestamp) : new Date(0);
+    const stillHasUnread = remainingNotifications.some(n => new Date(n.created_at) > lastRead);
+    if (!stillHasUnread) {
+        setHasNewNotification(false);
+    }
+
+    const result = await dismissNotification(notificationId);
+
+    if (!result.success) {
+        toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: result.error || 'Could not dismiss notification.'
+        });
+        // Re-fetch to revert optimistic update on failure
+        fetchUserNotifications();
+    }
+  }
+
+
+  return (
+    <header className="sticky top-0 z-30 relative flex h-14 items-center gap-4 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b px-4 shadow-[0_5px_15px_-10px_hsl(var(--border))] sm:px-6">
+       <div className="flex items-center gap-4">
+        {isAdmin && (
+            <Sheet>
+            <SheetTrigger asChild>
+                <Button size="icon" variant="ghost" className="sm:hidden">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle Menu</span>
+                </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="sm:max-w-xs">
+                <SheetHeader>
+                  <VisuallyHidden>
+                    <SheetTitle>Mobile Menu</SheetTitle>
+                  </VisuallyHidden>
+                </SheetHeader>
+                <nav className="grid gap-6 text-sm font-medium">
+                    <Link
+                        href="/dashboard"
+                        className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
+                    >
+                        <AppLogo className="h-5 w-5 transition-all group-hover:scale-110" />
+                        <span className="sr-only">sweep-drop</span>
+                    </Link>
+                    <MainSidebarNav isAdmin={isAdmin} />
+                </nav>
+            </SheetContent>
+            </Sheet>
+        )}
+        {!isAdmin && (
+             <Link
+                href="/dashboard"
+                className="group flex h-9 shrink-0 items-center gap-2 rounded-full bg-primary px-3 text-lg font-semibold text-primary-foreground md:h-8 md:text-base self-start"
+            >
+                <AppLogo className="h-4 w-4 transition-all group-hover:scale-110" />
+                <span className="hidden sm:inline">sweep-drop</span>
+            </Link>
+        )}
+       </div>
+      
+      <div className="flex-1 flex items-center justify-center">
+        {showStats && (
+            <div className="hidden md:block w-full">
+                <HeaderStats />
+            </div>
+        )}
+        {showStats && (
+          <HeaderMiniStats />
+        )}
+      </div>
+
+      <div className="flex items-center gap-2">
+         <Popover>
+            <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="overflow-hidden rounded-full relative">
+                    <Bell className="h-5 w-5" />
+                    {hasNewNotification && (
+                      <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                      </span>
+                    )}
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-96 p-0">
+                <div className="p-4 border-b flex justify-between items-center">
+                  <h4 className="font-medium leading-none">Notifications</h4>
+                   <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={handleMarkAllAsRead} 
+                      disabled={!hasNewNotification || isMarkingAsRead}
+                      className="text-xs text-muted-foreground hover:text-primary"
+                    >
+                      {isMarkingAsRead ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CheckCheck className="h-3 w-3 mr-1" />}
+                      Mark all as read
+                    </Button>
+                </div>
+                <div className="flex flex-col gap-1 p-2 max-h-[400px] overflow-y-auto">
+                    {isLoadingNotifications ? (
+                      <div className="flex items-center justify-center p-4">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : notifications.length > 0 ? (
+                      notifications.map(n => {
+                        const isUnread = lastReadTimestamp ? new Date(n.created_at) > new Date(lastReadTimestamp) : true;
+                        return (
+                          <div key={n.id} className={cn(
+                            "group relative flex items-start gap-3 p-3 rounded-lg transition-colors hover:bg-muted/50",
+                            isUnread ? "bg-primary/10" : ""
+                            )}>
+                            <div className="w-8 h-8 rounded-full bg-muted flex-shrink-0 flex items-center justify-center mt-1">
+                                <Bell className="h-4 w-4 text-primary" />
+                            </div>
+                            <div className="flex-1">
+                                <p className="font-semibold text-sm">{n.title}</p>
+                                <p className="text-sm text-muted-foreground">{n.body}</p>
+                                <p className="text-xs text-muted-foreground/70 mt-1">
+                                {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                                </p>
+                            </div>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 absolute top-2 right-2 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => handleDismissNotification(n.id)}
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )
+                       })
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-8">No notifications yet.</p>
+                    )}
+                </div>
+            </PopoverContent>
+        </Popover>
+
+        <UserMenuSheet user={user} profile={profile} />
+      </div>
+    </header>
+  );
+}

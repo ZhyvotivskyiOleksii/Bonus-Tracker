@@ -1,0 +1,25 @@
+rsync -avz --progress \
+  --exclude 'node_modules' \
+  --exclude '.next' \
+  --exclude 'dist' \
+  --exclude '.git' \
+  "/Users/oleksiizhyvotivskyi/Desktop/Bonus-Tracker/" \
+  root@45.148.244.75:/home/bugsy/sweep-drop.com/
+
+
+ssh root@45.148.244.75
+cd /home/bugsy/sweep-drop.com
+chown -R bugsy:bugsy .        
+npm run build
+pm2 restart sweep-drop --update-env
+
+
+cd /home/bugsy/sweep-drop.com && \
+chown -R bugsy:bugsy . && \
+npm run build && \
+pm2 restart sweep-drop --update-env && \
+pm2 logs sweep-drop --lines 20
+
+
+
+
