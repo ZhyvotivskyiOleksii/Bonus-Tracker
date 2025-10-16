@@ -67,7 +67,7 @@ export function CasinoActions({ casino }: { casino: Casino }) {
   return (
     <>
       <div className="flex items-center gap-2">
-        <CasinoFormDialog casino={casino} onOpenChange={setIsEditDialogOpen}>
+        <CasinoFormDialog key={`edit-${casino.id}`} casino={casino} onOpenChange={setIsEditDialogOpen}>
           <Button>
             <Pencil className="mr-2 h-4 w-4" />
             Edit

@@ -1,25 +1,29 @@
-rsync -avz --progress \
-  --exclude 'node_modules' \
-  --exclude '.next' \
-  --exclude 'dist' \
-  --exclude '.git' \
-  "/Users/oleksiizhyvotivskyi/Desktop/Bonus-Tracker/" \
-  root@45.148.244.75:/home/bugsy/sweep-drop.com/
-
 
 ssh root@45.148.244.75
-cd /home/bugsy/sweep-drop.com
-chown -R bugsy:bugsy .        
-npm run build
-pm2 restart sweep-drop --update-env
-
-
-cd /home/bugsy/sweep-drop.com && \
-chown -R bugsy:bugsy . && \
-npm run build && \
-pm2 restart sweep-drop --update-env && \
-pm2 logs sweep-drop --lines 20
+ClqVVFoUW0mMxfLbq6
 
 
 
 
+
+rsync -avz --progress \
+  --exclude 'node_modules' --exclude '.next' --exclude 'dist' --exclude '.git' \
+  "/Users/oleksiizhyvotivskyi/Desktop/Bonus-Tracker/" \
+  root@45.148.244.75:/home/bugsy/sweep-drop.com/ && \
+ssh root@45.148.244.75 "
+  cd /home/bugsy/sweep-drop.com && \
+  NODE_ENV=production npm run build && \
+  pm2 restart sweep-drop --update-env && pm2 save
+"
+
+
+
+
+
+
+
+
+
+фиксим след ошибку потом вернемся к рефералки .. вот от тим лида след пробелма Редактирование брендов в админ-панели
+При добавлении нового бренда через копирование существующего возникает ошибка при последующем редактировании: при клике на бренд открывается форма редактирования бренда,
+ который находится строкой выше. Чтобы открыть нужный бренд, приходится кликнуть дважды (сначала не тот, затем повторно правильный).

@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/client';
 import { Casino, CasinoStatus, UserCasino } from '@/lib/types';
+import { effectiveStatusForToday } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 
 export function HeaderStats() {
@@ -37,6 +38,12 @@ export function HeaderStats() {
         () => fetchInitialData()
     ).subscribe();
 
+    // Fallback: also refresh when any component dispatches a local event
+    const onLocalChanged = () => fetchInitialData();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('usercasinos:changed', onLocalChanged);
+    }
+
     const calculateTimeLeft = () => {
       const now = new Date();
       const newYorkTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
@@ -62,21 +69,27 @@ export function HeaderStats() {
         clearInterval(interval);
         supabase.removeChannel(casinoSub);
         supabase.removeChannel(userCasinoSub);
+        if (typeof window !== 'undefined') {
+          window.removeEventListener('usercasinos:changed', onLocalChanged);
+        }
     };
   }, []);
 
   if (!casinos.length) return null;
 
-  const collectedScToday = userCasinos
-    .filter(uc => uc.status === CasinoStatus.CollectedToday)
-    .reduce((total, uc) => {
-      const casino = casinos.find(c => c.id === uc.casino_id);
-      return total + (casino?.daily_sc ?? 0);
-    }, 0);
+  const collectedScToday = userCasinos.reduce((total, uc) => {
+    const eff = effectiveStatusForToday(uc.status as CasinoStatus, uc.last_collected_at);
+    if (eff !== CasinoStatus.CollectedToday) return total;
+    const casino = casinos.find(c => c.id === uc.casino_id);
+    if (!casino) return total;
+    const isRegCollected = (uc.status as CasinoStatus) === CasinoStatus.Registered;
+    return total + (isRegCollected ? (casino.welcome_sc ?? 0) : (casino.daily_sc ?? 0));
+  }, 0);
 
   const totalScToday = casinos.reduce((total, casino) => {
     const userCasino = userCasinos.find(uc => uc.casino_id === casino.id);
-    const status = userCasino?.status ?? CasinoStatus.NotRegistered;
+    const rawStatus = userCasino?.status ?? CasinoStatus.NotRegistered;
+    const status = userCasino ? effectiveStatusForToday(rawStatus as CasinoStatus, userCasino.last_collected_at) : rawStatus;
     
     if (status === CasinoStatus.NotRegistered) {
       return total + (casino.welcome_sc ?? 0);
@@ -84,16 +97,19 @@ export function HeaderStats() {
     return total + (casino.daily_sc ?? 0);
   }, 0);
 
-  const collectedGcToday = userCasinos
-    .filter(uc => uc.status === CasinoStatus.CollectedToday)
-    .reduce((total, uc) => {
-      const casino = casinos.find(c => c.id === uc.casino_id);
-      return total + (casino?.daily_gc ?? 0);
-    }, 0);
+  const collectedGcToday = userCasinos.reduce((total, uc) => {
+    const eff = effectiveStatusForToday(uc.status as CasinoStatus, uc.last_collected_at);
+    if (eff !== CasinoStatus.CollectedToday) return total;
+    const casino = casinos.find(c => c.id === uc.casino_id);
+    if (!casino) return total;
+    const isRegCollected = (uc.status as CasinoStatus) === CasinoStatus.Registered;
+    return total + (isRegCollected ? (casino.welcome_gc ?? 0) : (casino.daily_gc ?? 0));
+  }, 0);
 
   const totalGcToday = casinos.reduce((total, casino) => {
     const userCasino = userCasinos.find(uc => uc.casino_id === casino.id);
-    const status = userCasino?.status ?? CasinoStatus.NotRegistered;
+    const rawStatus = userCasino?.status ?? CasinoStatus.NotRegistered;
+    const status = userCasino ? effectiveStatusForToday(rawStatus as CasinoStatus, userCasino.last_collected_at) : rawStatus;
 
     if (status === CasinoStatus.NotRegistered) {
         return total + (casino.welcome_gc ?? 0);

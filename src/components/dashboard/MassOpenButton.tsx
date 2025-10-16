@@ -5,6 +5,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Casino, UserCasino, CasinoStatus } from "@/lib/types";
 import { ExternalLink, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { openInBackground } from "@/lib/utils";
 
 interface MassOpenButtonProps {
     casinos: Casino[];
@@ -15,15 +17,15 @@ export function MassOpenButton({ casinos, userCasinos }: MassOpenButtonProps) {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleMassOpen = () => {
+    const handleMassOpen = async () => {
         setIsLoading(true);
 
-        const urlsToOpen = casinos
+        const eligible = casinos
             .filter(c => {
                 const userCasino = userCasinos.find(uc => uc.casino_id === c.id);
                 return userCasino?.status === CasinoStatus.Registered && c.casino_url;
             })
-            .map(c => c.casino_url as string);
+        const urlsToOpen = eligible.map(c => c.casino_url as string);
 
         if (urlsToOpen.length === 0) {
             toast({
@@ -41,9 +43,29 @@ export function MassOpenButton({ casinos, userCasinos }: MassOpenButtonProps) {
 
         urlsToOpen.forEach((url, index) => {
             setTimeout(() => {
-                window.open(url, '_blank');
+                openInBackground(url);
             }, index * 200); // Stagger opening to avoid aggressive pop-up blocking
         });
+        
+        // Optimistically mark these as collected today to refresh header stats
+        try {
+          const supabase = createClient();
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            for (const c of eligible) {
+              await supabase
+                .from('user_casinos')
+                .update({ status: CasinoStatus.CollectedToday, last_collected_at: new Date().toISOString() })
+                .eq('user_id', user.id)
+                .eq('casino_id', c.id);
+            }
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new Event('usercasinos:changed'));
+            }
+          }
+        } catch (e) {
+          console.warn('Local mass-update failed (non-fatal):', e);
+        }
         
         setTimeout(() => setIsLoading(false), urlsToOpen.length * 200 + 500);
     };

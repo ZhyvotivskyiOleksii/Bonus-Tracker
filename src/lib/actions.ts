@@ -24,12 +24,7 @@ export async function getAffiliateLink(casinoId: string, casinoUrl: string): Pro
   const supabase = createClient();
   const profile = await getUserProfile();
   if (!profile || !profile.short_id) {
-    // Not logged in or profile not set up, return base url
-    const { error: updateError } = await supabase
-                .from('user_casinos')
-                .update({ status: CasinoStatus.CollectedToday, last_collected_at: new Date().toISOString() })
-                .eq('casino_id', casinoId);
-            if (updateError) throw updateError;
+    // Not logged in: return original URL. Do NOT update DB without user context.
     return casinoUrl;
   }
   const userId = profile.id;
@@ -47,10 +42,14 @@ export async function getAffiliateLink(casinoId: string, casinoUrl: string): Pro
         throw selectError;
     }
 
-    const newStatus = userCasino?.status === CasinoStatus.NotRegistered ? CasinoStatus.Registered : CasinoStatus.CollectedToday;
+    // Registration click should mark as Registered (welcome collected today).
+    // Subsequent clicks (already registered) count as daily -> CollectedToday.
+    const newStatus = userCasino?.status === CasinoStatus.NotRegistered || !userCasino
+      ? CasinoStatus.Registered
+      : CasinoStatus.CollectedToday;
 
     if (userCasino) {
-        if (userCasino.status !== CasinoStatus.CollectedToday) {
+        if (userCasino.status !== newStatus) {
             const { error: updateError } = await supabase
                 .from('user_casinos')
                 .update({ status: newStatus, last_collected_at: new Date().toISOString() })

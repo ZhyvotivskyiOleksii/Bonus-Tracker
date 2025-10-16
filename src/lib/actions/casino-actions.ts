@@ -4,7 +4,10 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import sharp from 'sharp';
+// Use dynamic import for sharp to avoid build-time native dependency issues
+// in environments where sharp prebuilds are unavailable (e.g., local dev on
+// differing architectures). We'll fall back to uploading the original image
+// if sharp cannot be loaded.
 
 const casinoSchema = z.object({
   id: z.string().optional(),
@@ -67,37 +70,55 @@ export async function duplicateCasino(id: string): Promise<ActionResponse> {
 
 // --- UPLOAD LOGO ---
 async function uploadLogo(supabase: any, file: File, casinoId: string): Promise<string> {
-    const fileBuffer = Buffer.from(await file.arrayBuffer());
+  const fileBuffer = Buffer.from(await file.arrayBuffer());
 
-    // Convert and optimize image to PNG using sharp
-    const pngBuffer = await sharp(fileBuffer)
-        .resize({ width: 400 }) // Resize to a max width of 400px, keeping aspect ratio
-        .png({ quality: 80 }) // Set PNG quality
+  // Try to load sharp at runtime; fall back to original buffer on failure
+  let outputBuffer = fileBuffer;
+  let contentType = (file as any).type || 'application/octet-stream';
+  let extension = '';
+  try {
+    const sharpMod: any = await import('sharp').then((m) => m.default || m);
+    if (sharpMod) {
+      outputBuffer = await sharpMod(fileBuffer)
+        .resize({ width: 400 })
+        .png({ quality: 80 })
         .toBuffer();
-
-    const fileName = `${casinoId}-${Date.now()}.png`;
-    const filePath = `public/${fileName}`;
-
-    const { error: uploadError } = await supabase.storage
-        .from('casino-logos')
-        .upload(filePath, pngBuffer, { 
-            contentType: 'image/png',
-            upsert: true 
-        });
-
-    if (uploadError) {
-        throw new Error(`Storage error: ${uploadError.message}`);
+      contentType = 'image/png';
+      extension = '.png';
     }
-
-    const { data: publicUrlData } = supabase.storage
-        .from('casino-logos')
-        .getPublicUrl(filePath);
-
-    if (!publicUrlData) {
-        throw new Error('Could not get public URL for logo');
+  } catch (e) {
+    // No sharp available or failed conversion — proceed with original file
+    console.warn('sharp not available; uploading original file without conversion');
+    // Try to infer extension from original name if present
+    const name = (file as any).name as string | undefined;
+    if (name && name.includes('.')) {
+      extension = name.substring(name.lastIndexOf('.'));
     }
-    
-    return publicUrlData.publicUrl;
+  }
+
+  const fileName = `${casinoId}-${Date.now()}${extension || ''}`;
+  const filePath = `public/${fileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('casino-logos')
+    .upload(filePath, outputBuffer, {
+      contentType,
+      upsert: true,
+    });
+
+  if (uploadError) {
+    throw new Error(`Storage error: ${uploadError.message}`);
+  }
+
+  const { data: publicUrlData } = supabase.storage
+    .from('casino-logos')
+    .getPublicUrl(filePath);
+
+  if (!publicUrlData) {
+    throw new Error('Could not get public URL for logo');
+  }
+
+  return publicUrlData.publicUrl;
 }
 
 // --- SAVE CASINO (CREATE/UPDATE) ---

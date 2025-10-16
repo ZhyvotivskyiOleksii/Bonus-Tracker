@@ -3,12 +3,13 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { cn, effectiveStatusForToday, isCollectedTodayNY, openInBackground, preOpenBackground } from '@/lib/utils';
 import type { Casino } from '@/lib/types';
 import { UserCasino, CasinoStatus } from '@/lib/types';
 import { Check, Loader2 } from 'lucide-react';
 import { getAffiliateLink } from '@/lib/actions';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 type CasinoCardProps = {
   casino: Casino;
@@ -17,20 +18,115 @@ type CasinoCardProps = {
 
 export function CasinoCard({ casino, userCasino }: CasinoCardProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const status = userCasino?.status as CasinoStatus ?? CasinoStatus.NotRegistered;
+  const initialStatusRaw = (userCasino?.status as CasinoStatus) ?? CasinoStatus.NotRegistered;
+  const initialStatus = userCasino ? effectiveStatusForToday(initialStatusRaw, userCasino.last_collected_at) : initialStatusRaw;
+  const [currentStatus, setCurrentStatus] = useState<CasinoStatus>(initialStatus);
+  const [rawStatus, setRawStatus] = useState<CasinoStatus>(initialStatusRaw);
+  const [lastCollectedAt, setLastCollectedAt] = useState<string | null | undefined>(userCasino?.last_collected_at);
+
+  // Subscribe to realtime changes for this user's row to keep card in sync
+  useEffect(() => {
+    const supabase = createClient();
+    let isMounted = true;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const channel = supabase
+        .channel(`user-casino-card-${casino.id}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'user_casinos', filter: `user_id=eq.${user.id}` },
+          (payload: any) => {
+            const row = (payload.new || payload.old);
+            if (row?.casino_id === casino.id && isMounted) {
+              const eff = effectiveStatusForToday(row.status as CasinoStatus, row.last_collected_at);
+              setCurrentStatus(eff);
+              setRawStatus(row.status as CasinoStatus);
+              setLastCollectedAt(row.last_collected_at);
+            }
+          }
+        )
+        .subscribe();
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    })();
+    return () => { isMounted = false; };
+  }, [casino.id]);
 
   const handleActionClick = async () => {
-    if (status === CasinoStatus.CollectedToday || !casino.casino_url) return;
+    if (currentStatus === CasinoStatus.CollectedToday || !casino.casino_url) return;
     setIsLoading(true);
     try {
+        // Pre-open background tab synchronously to keep focus
+        const pre = preOpenBackground();
         const link = await getAffiliateLink(casino.id, casino.casino_url);
-        window.open(link, '_blank');
+        if (pre) {
+          try { pre.location.href = link; } catch { try { pre.location.assign(link); } catch {} }
+        } else {
+          // Fallback if popup blocked
+          openInBackground(link);
+        }
+        // Optimistically update local user_casinos to trigger realtime UI updates
+        try {
+          const supabase = createClient();
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            // If was not registered -> Registered (welcome collected today).
+            // Otherwise -> CollectedToday (daily collected today).
+            const newStatus = currentStatus === CasinoStatus.NotRegistered ? CasinoStatus.Registered : CasinoStatus.CollectedToday;
+            const { data: existing } = await supabase
+              .from('user_casinos')
+              .select('id, status, last_collected_at')
+              .eq('user_id', user.id)
+              .eq('casino_id', casino.id)
+              .maybeSingle();
+            if (existing) {
+              if (existing.status !== newStatus) {
+                await supabase
+                  .from('user_casinos')
+                  .update({ status: newStatus, last_collected_at: new Date().toISOString() })
+                  .eq('id', existing.id);
+              }
+            } else {
+              await supabase
+                .from('user_casinos')
+                .insert({
+                  user_id: user.id,
+                  casino_id: casino.id,
+                  status: newStatus,
+                  last_collected_at: new Date().toISOString(),
+                });
+            }
+            const nowIso = new Date().toISOString();
+            // UI: lock as collected for today regardless of Registered/Daily
+            setCurrentStatus(effectiveStatusForToday(newStatus, nowIso));
+            setRawStatus(newStatus);
+            setLastCollectedAt(nowIso);
+            // Notify other components to refresh (in case Realtime is not enabled)
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new Event('usercasinos:changed'));
+            }
+          }
+        } catch (e) {
+          console.warn('Local realtime update failed (non-fatal):', e);
+        }
     } catch(e) {
         console.error(e);
     } finally {
         setIsLoading(false);
     }
   };
+
+  // At NY midnight, if previously collected, flip back to Registered automatically
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (currentStatus === CasinoStatus.CollectedToday && lastCollectedAt && !isCollectedTodayNY(lastCollectedAt)) {
+        setCurrentStatus(CasinoStatus.Registered);
+      }
+    }, 60 * 1000);
+    return () => clearInterval(id);
+  }, [currentStatus, lastCollectedAt]);
 
   const formatCoins = (amount: number | null) => {
     if (amount === null || amount === undefined) return '0';
@@ -46,8 +142,9 @@ export function CasinoCard({ casino, userCasino }: CasinoCardProps) {
     return amount.toFixed(2);
   }
 
-  const isNotRegistered = status === CasinoStatus.NotRegistered;
-  const isCollected = status === CasinoStatus.CollectedToday;
+  const isNotRegistered = currentStatus === CasinoStatus.NotRegistered;
+  const isCollectedDaily = rawStatus === CasinoStatus.CollectedToday && currentStatus === CasinoStatus.CollectedToday;
+  const isRegistrationLock = rawStatus === CasinoStatus.Registered && currentStatus === CasinoStatus.CollectedToday;
 
   const renderContent = () => {
     if (isNotRegistered) {
@@ -93,7 +190,14 @@ export function CasinoCard({ casino, userCasino }: CasinoCardProps) {
       </>
     );
 
-    switch (status) {
+    if (isRegistrationLock) {
+      return (
+        <Button {...commonProps} disabled className="bg-primary/30 text-primary-foreground/80 cursor-not-allowed">
+          {buttonContent(null, 'Get Bonus')}
+        </Button>
+      );
+    }
+    switch (currentStatus) {
       case CasinoStatus.CollectedToday:
         return (
           <Button variant="ghost" className={cn(commonProps.className, "bg-status-collected-button hover:bg-status-collected-button/90 text-white")} disabled>
@@ -119,11 +223,11 @@ export function CasinoCard({ casino, userCasino }: CasinoCardProps) {
   };
 
   const getCardClasses = () => {
-    switch (status) {
+    switch (currentStatus) {
       case CasinoStatus.NotRegistered:
         return 'border-status-not-registered';
       case CasinoStatus.CollectedToday:
-        return 'border-status-collected-border';
+        return isCollectedDaily ? 'border-status-collected-border' : 'border-border';
       default:
         return 'border-border';
     }
@@ -134,7 +238,7 @@ export function CasinoCard({ casino, userCasino }: CasinoCardProps) {
         'flex flex-col justify-between transition-all duration-300 border shadow-lg hover:shadow-2xl hover:scale-[1.02] relative overflow-hidden group p-4 rounded-2xl',
          getCardClasses()
     )}>
-       {isCollected && (
+       {isCollectedDaily && (
           <div className="absolute top-3 right-3 h-8 w-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
             <Check className="h-6 w-6 text-status-collected-button" />
           </div>

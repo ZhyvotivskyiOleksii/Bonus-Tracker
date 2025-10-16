@@ -45,6 +45,12 @@ export function DataTable<TData, TValue>({
   const table = useReactTable({
     data,
     columns,
+    // Use a stable row id keyed by the entity's primary key to avoid
+    // state mismatch when rows are inserted/duplicated and order changes
+    getRowId: (originalRow, index, parent) => {
+      const anyRow = originalRow as any;
+      return (anyRow && (anyRow.id || anyRow.key || anyRow._id)) ?? String(index);
+    },
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,

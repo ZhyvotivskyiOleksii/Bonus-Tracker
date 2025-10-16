@@ -26,7 +26,7 @@ import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import type { Casino } from '@/lib/types';
 import { saveCasino } from '@/lib/actions/casino-actions';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Loader2, Plus, UploadCloud, X } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -57,7 +57,7 @@ export function CasinoFormDialog({ casino, children, onOpenChange }: CasinoFormD
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(casino?.logo_url ?? null);
 
-  const defaultFormValues = {
+  const defaultFormValues = useMemo(() => ({
     id: casino?.id || undefined,
     name: casino?.name || '',
     casino_url: casino?.casino_url || '',
@@ -66,7 +66,7 @@ export function CasinoFormDialog({ casino, children, onOpenChange }: CasinoFormD
     daily_gc: casino?.daily_gc ?? 0,
     welcome_sc: casino?.welcome_sc ?? 0,
     welcome_gc: casino?.welcome_gc ?? 0,
-  };
+  }), [casino]);
 
   const form = useForm<CasinoFormValues>({
     resolver: zodResolver(formSchema),
@@ -84,11 +84,18 @@ export function CasinoFormDialog({ casino, children, onOpenChange }: CasinoFormD
     if (onOpenChange) {
       onOpenChange(isOpen);
     }
-    if (!isOpen) {
-      // If dialog closes, reset form to initial state
+    // Always sync form values with the latest casino data whenever dialog toggles
+    // This prevents showing stale data after duplicating/renaming rows.
+    handleReset();
+  }
+
+  // If the selected casino changes while dialog is open, keep the form in sync
+  useEffect(() => {
+    if (open) {
       handleReset();
     }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, defaultFormValues]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

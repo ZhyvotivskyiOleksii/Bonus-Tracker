@@ -9,6 +9,22 @@ export async function middleware(request: NextRequest) {
     },
   })
 
+  // Capture referral code from URL (?ref=SHORTID) into a cookie for later use (OAuth/email flows)
+  try {
+    const url = new URL(request.url);
+    const ref = url.searchParams.get('ref');
+    if (ref && ref.length <= 32) {
+      response.cookies.set({
+        name: 'referral_code',
+        value: ref,
+        path: '/',
+        sameSite: 'lax',
+        httpOnly: false,
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      })
+    }
+  } catch {}
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
