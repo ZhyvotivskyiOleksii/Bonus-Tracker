@@ -59,7 +59,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="w-full space-y-4">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sticky-under-header-2">
             <Input
             placeholder="Filter by email..."
             value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}

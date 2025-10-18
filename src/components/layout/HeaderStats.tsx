@@ -1,8 +1,8 @@
 'use client';
 
 import { createClient } from '@/lib/supabase/client';
-import { Casino, CasinoStatus, UserCasino } from '@/lib/types';
-import { effectiveStatusForToday } from '@/lib/utils';
+import { Casino, UserCasino } from '@/lib/types';
+import { computeBonusTotals } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 
 export function HeaderStats() {
@@ -77,45 +77,12 @@ export function HeaderStats() {
 
   if (!casinos.length) return null;
 
-  const collectedScToday = userCasinos.reduce((total, uc) => {
-    const eff = effectiveStatusForToday(uc.status as CasinoStatus, uc.last_collected_at);
-    if (eff !== CasinoStatus.CollectedToday) return total;
-    const casino = casinos.find(c => c.id === uc.casino_id);
-    if (!casino) return total;
-    const isRegCollected = (uc.status as CasinoStatus) === CasinoStatus.Registered;
-    return total + (isRegCollected ? (casino.welcome_sc ?? 0) : (casino.daily_sc ?? 0));
-  }, 0);
-
-  const totalScToday = casinos.reduce((total, casino) => {
-    const userCasino = userCasinos.find(uc => uc.casino_id === casino.id);
-    const rawStatus = userCasino?.status ?? CasinoStatus.NotRegistered;
-    const status = userCasino ? effectiveStatusForToday(rawStatus as CasinoStatus, userCasino.last_collected_at) : rawStatus;
-    
-    if (status === CasinoStatus.NotRegistered) {
-      return total + (casino.welcome_sc ?? 0);
-    }
-    return total + (casino.daily_sc ?? 0);
-  }, 0);
-
-  const collectedGcToday = userCasinos.reduce((total, uc) => {
-    const eff = effectiveStatusForToday(uc.status as CasinoStatus, uc.last_collected_at);
-    if (eff !== CasinoStatus.CollectedToday) return total;
-    const casino = casinos.find(c => c.id === uc.casino_id);
-    if (!casino) return total;
-    const isRegCollected = (uc.status as CasinoStatus) === CasinoStatus.Registered;
-    return total + (isRegCollected ? (casino.welcome_gc ?? 0) : (casino.daily_gc ?? 0));
-  }, 0);
-
-  const totalGcToday = casinos.reduce((total, casino) => {
-    const userCasino = userCasinos.find(uc => uc.casino_id === casino.id);
-    const rawStatus = userCasino?.status ?? CasinoStatus.NotRegistered;
-    const status = userCasino ? effectiveStatusForToday(rawStatus as CasinoStatus, userCasino.last_collected_at) : rawStatus;
-
-    if (status === CasinoStatus.NotRegistered) {
-        return total + (casino.welcome_gc ?? 0);
-    }
-    return total + (casino.daily_gc ?? 0);
-  }, 0);
+  const {
+    scCollected: collectedScToday,
+    scTotal: totalScToday,
+    gcCollected: collectedGcToday,
+    gcTotal: totalGcToday,
+  } = computeBonusTotals(casinos, userCasinos);
 
   const formatCoins = (amount: number) => {
     return new Intl.NumberFormat('en-US').format(amount);

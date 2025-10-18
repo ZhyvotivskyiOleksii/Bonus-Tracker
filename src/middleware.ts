@@ -2,12 +2,62 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const MAX_COOKIE_HEADER_BYTES = 16 * 1024; // 16KB total for Cookie header
+
+function byteLength(str: string): number {
+  try { return new TextEncoder().encode(str).length } catch { return str.length }
+}
+
+function shouldKeepCookie(name: string) {
+  // Keep essential auth cookies and our small helper cookie
+  if (name.startsWith('sb-')) return true; // Supabase tokens
+  if (name === 'referral_code') return true;
+  return false;
+}
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   })
+
+  // Guard: if incoming Cookie header exceeds threshold, prune non-essential cookies
+  const cookieHeader = request.headers.get('cookie') || '';
+  if (byteLength(cookieHeader) > MAX_COOKIE_HEADER_BYTES) {
+
+    const all = request.cookies.getAll();
+    const keep = new Set<string>();
+    const supabaseCookies: { name: string; value: string }[] = [];
+    for (const c of all) {
+      if (c.name.startsWith('sb-')) {
+        supabaseCookies.push({ name: c.name, value: c.value });
+        keep.add(c.name);
+      } else if (c.name === 'referral_code') {
+        keep.add(c.name);
+      }
+    }
+
+    // If почему‑то накопилось больше 2 supabase‑кук, оставим самые длинные две
+    if (supabaseCookies.length > 2) {
+      supabaseCookies
+        .sort((a, b) => b.value.length - a.value.length)
+        .slice(2)
+        .forEach((c) => keep.delete(c.name));
+    }
+
+    // Delete everything, что не попало в keep
+    for (const c of all) {
+      if (!keep.has(c.name)) {
+        response.cookies.set({
+          name: c.name,
+          value: '',
+          path: '/',
+          maxAge: 0,
+        });
+      }
+    }
+  }
 
   // Capture referral code from URL (?ref=SHORTID) into a cookie for later use (OAuth/email flows)
   try {

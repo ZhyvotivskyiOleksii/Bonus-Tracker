@@ -1,9 +1,11 @@
 
 import { getAnalyticsDashboardData } from "@/lib/actions/analytics-actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Shield, BookUser, Handshake } from "lucide-react";
+import { Users, Shield, BookUser, Handshake, BarChart } from "lucide-react";
+import { AnalyticsStatCard } from "./components/AnalyticsStatCard";
 import { CasinoPopularityChart } from "./components/CasinoPopularityChart";
 import { DailyBonusCollectionsChart } from "./components/DailyBonusCollectionsChart";
+import { SectionHeader } from "@/components/layout/SectionHeader";
 
 export default async function AnalyticsPage() {
   const {
@@ -17,54 +19,42 @@ export default async function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-       <div>
-        <h1 className="text-2xl font-bold">Analytics</h1>
-        <p className="text-muted-foreground">
-          Overview of your application's data and user activity.
-        </p>
-      </div>
+      <SectionHeader
+        title="Analytics"
+        description="Overview of your application's data and user activity."
+        icon={<BarChart className="h-4 w-4 text-primary" />}
+        className="sticky-under-header"
+      />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalUsers}</div>
-            <p className="text-xs text-muted-foreground">Total registered users in the system.</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Casinos</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalCasinos}</div>
-            <p className="text-xs text-muted-foreground">Total casinos available for tracking.</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Casino Registrations</CardTitle>
-            <BookUser className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalRegistrations}</div>
-            <p className="text-xs text-muted-foreground">User-to-casino tracking relationships.</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Referrals</CardTitle>
-            <Handshake className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalReferrals}</div>
-            <p className="text-xs text-muted-foreground">Users registered via referral links.</p>
-          </CardContent>
-        </Card>
+        <AnalyticsStatCard
+          title="Total Users"
+          value={totalUsers}
+          description="Total registered users in the system."
+          icon={<Users className="h-4 w-4" />}
+          accent="primary"
+        />
+        <AnalyticsStatCard
+          title="Total Casinos"
+          value={totalCasinos}
+          description="Total casinos available for tracking."
+          icon={<Shield className="h-4 w-4" />}
+          accent="purple"
+        />
+        <AnalyticsStatCard
+          title="Casino Registrations"
+          value={totalRegistrations}
+          description="User-to-casino tracking relationships."
+          icon={<BookUser className="h-4 w-4" />}
+          accent="green"
+        />
+        <AnalyticsStatCard
+          title="Total Referrals"
+          value={totalReferrals}
+          description="Users registered via referral links."
+          icon={<Handshake className="h-4 w-4" />}
+          accent="yellow"
+        />
       </div>
       
       <div className="grid gap-6 lg:grid-cols-2">
@@ -74,3 +64,5 @@ export default async function AnalyticsPage() {
     </div>
   );
 }
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;

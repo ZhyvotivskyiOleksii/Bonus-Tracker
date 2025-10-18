@@ -129,7 +129,8 @@ export function Header({ user, profile, showStats = false }: { user: User, profi
 
 
   return (
-    <header className="sticky top-0 z-30 relative flex h-14 items-center gap-4 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b px-4 shadow-[0_5px_15px_-10px_hsl(var(--border))] sm:px-6">
+    <header className="fixed inset-x-0 top-0 z-30 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b shadow-[0_5px_15px_-10px_hsl(var(--border))]">
+      <div className="w-full px-5 h-14 flex items-center justify-between gap-4">
        <div className="flex items-center gap-4">
         {isAdmin && (
             <Sheet>
@@ -158,15 +159,13 @@ export function Header({ user, profile, showStats = false }: { user: User, profi
             </SheetContent>
             </Sheet>
         )}
-        {!isAdmin && (
-             <Link
-                href="/dashboard"
-                className="group flex h-9 shrink-0 items-center gap-2 rounded-full bg-primary px-3 text-lg font-semibold text-primary-foreground md:h-8 md:text-base self-start"
-            >
-                <AppLogo className="h-4 w-4 transition-all group-hover:scale-110" />
-                <span className="hidden sm:inline">sweep-drop</span>
-            </Link>
-        )}
+        <Link
+          href="/dashboard"
+          className="group flex h-9 shrink-0 items-center gap-2 rounded-full bg-primary px-3 text-lg font-semibold text-primary-foreground md:h-8 md:text-base self-start"
+        >
+          <AppLogo className="h-4 w-4 transition-all group-hover:scale-110" />
+          <span className="hidden sm:inline">sweep-drop</span>
+        </Link>
        </div>
       
       <div className="flex-1 flex items-center justify-center">
@@ -325,6 +324,7 @@ export function Header({ user, profile, showStats = false }: { user: User, profi
          </div>
 
         <UserMenuSheet user={user} profile={profile} />
+      </div>
       </div>
     </header>
   );

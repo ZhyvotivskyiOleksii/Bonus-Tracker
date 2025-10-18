@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { CasinoStatus } from "./types";
+import type { Casino, UserCasino } from "./types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -71,4 +72,54 @@ export function preOpenBackground(): Window | null {
   } catch {
     return null;
   }
+}
+
+// Unified calculations for totals and collected values across SC/GC.
+// Ensures HeaderStats and DailyTrackerHeader remain consistent.
+export function computeBonusTotals(casinos: Casino[], userCasinos: UserCasino[]) {
+  const findUC = (casinoId: string) => userCasinos.find((u) => u.casino_id === casinoId);
+
+  let scCollected = 0;
+  let scTotal = 0;
+  let scCardsCollected = 0;
+  let scCardsTotal = 0;
+
+  let gcCollected = 0;
+  let gcTotal = 0;
+  let gcCardsCollected = 0;
+  let gcCardsTotal = 0;
+
+  for (const casino of casinos) {
+    const uc = findUC(casino.id);
+    const rawStatus = (uc?.status as CasinoStatus) ?? CasinoStatus.NotRegistered;
+    const statusToday = uc ? effectiveStatusForToday(rawStatus, uc.last_collected_at) : rawStatus;
+
+    // Amounts available today (denominator)
+    const scAvail = statusToday === CasinoStatus.NotRegistered ? (casino.welcome_sc ?? 0) : (casino.daily_sc ?? 0);
+    const gcAvail = statusToday === CasinoStatus.NotRegistered ? (casino.welcome_gc ?? 0) : (casino.daily_gc ?? 0);
+    scTotal += scAvail;
+    gcTotal += gcAvail;
+    if (scAvail > 0) scCardsTotal += 1;
+    if (gcAvail > 0) gcCardsTotal += 1;
+
+    // Amounts collected today (numerator)
+    if (statusToday === CasinoStatus.CollectedToday && uc) {
+      const collectedIsWelcome = rawStatus === CasinoStatus.Registered; // first-day collect after registration
+      scCollected += collectedIsWelcome ? (casino.welcome_sc ?? 0) : (casino.daily_sc ?? 0);
+      gcCollected += collectedIsWelcome ? (casino.welcome_gc ?? 0) : (casino.daily_gc ?? 0);
+      if ((collectedIsWelcome ? (casino.welcome_sc ?? 0) : (casino.daily_sc ?? 0)) > 0) scCardsCollected += 1;
+      if ((collectedIsWelcome ? (casino.welcome_gc ?? 0) : (casino.daily_gc ?? 0)) > 0) gcCardsCollected += 1;
+    }
+  }
+
+  return {
+    scCollected,
+    scTotal,
+    scCardsCollected,
+    scCardsTotal,
+    gcCollected,
+    gcTotal,
+    gcCardsCollected,
+    gcCardsTotal,
+  };
 }

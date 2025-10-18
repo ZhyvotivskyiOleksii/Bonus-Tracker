@@ -5,6 +5,9 @@ import { Header } from '@/components/layout/Header';
 import { MainSidebarUI } from '@/components/layout/MainSidebarUI';
 import { MainSidebarNav } from '@/components/layout/MainSidebarNav';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function AnalyticsLayout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -30,9 +33,11 @@ export default async function AnalyticsLayout({ children }: { children: React.Re
       <MainSidebarUI>
         <MainSidebarNav isAdmin={isAdmin} />
       </MainSidebarUI>
-      <div className="flex flex-1 flex-col sm:pl-60">
+      <div className="flex flex-1 flex-col">
         <Header user={user} profile={profile as Profile} />
-        <main className="flex-1 overflow-y-auto p-4 sm:px-6">{children}</main>
+        <div className="w-full max-w-[1400px] sm:pl-60">
+          <main className="flex-1 overflow-y-auto px-5 py-5 under-header admin-fit mt-3 sm:mt-4">{children}</main>
+        </div>
       </div>
     </div>
   );

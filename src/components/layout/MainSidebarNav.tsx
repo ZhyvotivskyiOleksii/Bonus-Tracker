@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Home, ShieldCheck, Settings, BarChart, Bell, Users, Mails } from 'lucide-react';
@@ -19,7 +20,7 @@ const adminNavItems = [
 
 // This component is now purely for rendering navigation links on the client
 export function MainSidebarNav({ isAdmin }: { isAdmin: boolean }) {
-  const pathname = usePathname();
+  const pathname = usePathname() || '';
   let navItems = isAdmin ? [...adminNavItems] : [...baseNavItems];
 
   // Logic to ensure correct nav items are displayed for admins vs users

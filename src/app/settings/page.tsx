@@ -5,6 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 import type { Profile } from "@/lib/types";
 import { columns } from "../admin/components/columns";
 import { DataTable } from "../admin/components/data-table";
+import { CasinosMobile } from "./components/CasinosMobile";
+import { SectionHeader } from "@/components/layout/SectionHeader";
+import { Settings as SettingsIcon } from "lucide-react";
 
 export default async function SettingsPage() {
   const supabase = createClient();
@@ -21,13 +24,20 @@ export default async function SettingsPage() {
 
   return (
     <div className="w-full space-y-6">
-       <div>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">
-          Manage casino offers and application settings.
-        </p>
-      </div>
-       <DataTable columns={columns} data={casinos || []} />
+       <SectionHeader
+         title="Settings"
+         description="Manage casino offers and application settings."
+         icon={<SettingsIcon className="h-4 w-4 text-primary" />}
+         className="sticky-under-header"
+       />
+       <div className="md:hidden overflow-x-hidden">
+         <CasinosMobile casinos={casinos || []} />
+       </div>
+       <div className="hidden md:block">
+         <DataTable columns={columns} data={casinos || []} />
+       </div>
     </div>
   )
 }
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;

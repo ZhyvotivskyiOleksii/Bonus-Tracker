@@ -2,7 +2,7 @@
 
 import { Progress } from '@/components/ui/progress';
 import { Casino, CasinoStatus, UserCasino } from '@/lib/types';
-import { effectiveStatusForToday } from '@/lib/utils';
+import { computeBonusTotals, effectiveStatusForToday } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { GcCoinIcon, ScCoinIcon } from '../icons';
 
@@ -39,54 +39,29 @@ export function DailyTrackerHeader({ casinos, userCasinos }: DailyTrackerHeaderP
     return () => clearInterval(interval);
   }, []);
 
-  const collectedScToday = userCasinos.reduce((total, uc) => {
-    const eff = effectiveStatusForToday(uc.status as CasinoStatus, uc.last_collected_at);
-    if (eff !== CasinoStatus.CollectedToday) return total;
-    const casino = casinos.find(c => c.id === uc.casino_id);
-    if (!casino) return total;
-    const isRegCollected = (uc.status as CasinoStatus) === CasinoStatus.Registered;
-    return total + (isRegCollected ? (casino.welcome_sc ?? 0) : (casino.daily_sc ?? 0));
-  }, 0);
-
-  const totalScToday = casinos.reduce((total, casino) => {
-    const userCasino = userCasinos.find(uc => uc.casino_id === casino.id);
-    const rawStatus = userCasino?.status ?? CasinoStatus.NotRegistered;
-    const status = userCasino ? effectiveStatusForToday(rawStatus as CasinoStatus, userCasino.last_collected_at) : rawStatus;
-    
-    if (status === CasinoStatus.NotRegistered) {
-      return total + (casino.welcome_sc ?? 0);
-    }
-    return total + (casino.daily_sc ?? 0);
-  }, 0);
-
-
-  const collectedGcToday = userCasinos.reduce((total, uc) => {
-    const eff = effectiveStatusForToday(uc.status as CasinoStatus, uc.last_collected_at);
-    if (eff !== CasinoStatus.CollectedToday) return total;
-    const casino = casinos.find(c => c.id === uc.casino_id);
-    if (!casino) return total;
-    const isRegCollected = (uc.status as CasinoStatus) === CasinoStatus.Registered;
-    return total + (isRegCollected ? (casino.welcome_gc ?? 0) : (casino.daily_gc ?? 0));
-  }, 0);
-
-  const totalGcToday = casinos.reduce((total, casino) => {
-    const userCasino = userCasinos.find(uc => uc.casino_id === casino.id);
-    const rawStatus = userCasino?.status ?? CasinoStatus.NotRegistered;
-    const status = userCasino ? effectiveStatusForToday(rawStatus as CasinoStatus, userCasino.last_collected_at) : rawStatus;
-
-    if (status === CasinoStatus.NotRegistered) {
-        return total + (casino.welcome_gc ?? 0);
-    }
-    return total + (casino.daily_gc ?? 0);
-  }, 0);
+  const {
+    scCollected: collectedScToday,
+    scTotal: totalScToday,
+    gcCollected: collectedGcToday,
+    gcTotal: totalGcToday,
+    scCardsCollected: collectedScCards,
+    scCardsTotal: totalScCards,
+    gcCardsCollected: collectedGcCards,
+    gcCardsTotal: totalGcCards,
+  } = computeBonusTotals(casinos, userCasinos);
 
 
   const formatGc = (amount: number) => {
     return new Intl.NumberFormat('en-US').format(amount);
   }
 
-  const scProgress = totalScToday > 0 ? (collectedScToday / totalScToday) * 100 : 0;
-  const gcProgress = totalGcToday > 0 ? (collectedGcToday / totalGcToday) * 100 : 0;
+  // Progress should reflect how many cards are collected (count-based),
+  // while keeping amounts for the numeric labels. This auto‑scales with the
+  // number of casinos available today.
+  // card-count totals now come from computeBonusTotals
+
+  const scProgress = totalScCards > 0 ? (collectedScCards / totalScCards) * 100 : 0;
+  const gcProgress = totalGcCards > 0 ? (collectedGcCards / totalGcCards) * 100 : 0;
 
   return (
     <div id="daily-tracker-header" className="bg-card p-6 rounded-lg shadow-lg">

@@ -1,17 +1,22 @@
 import Link from "next/link"
 
 export function Footer() {
-    return (
-        <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t bg-card">
-            <p className="text-xs text-muted-foreground">&copy; 2024 sweep-drop. All rights reserved.</p>
-            <nav className="sm:ml-auto flex gap-4 sm:gap-6">
-                <Link className="text-xs hover:underline underline-offset-4" href="#">
-                    Terms of Service
-                </Link>
-                <Link className="text-xs hover:underline underline-offset-4" href="#">
-                    Privacy Policy
-                </Link>
-            </nav>
-        </footer>
-    )
+  const year = new Date().getFullYear();
+  return (
+    <footer className="w-full border-t bg-card">
+      <div className="container mx-auto px-4 md:px-6 py-6 text-center">
+        <p className="text-xs text-muted-foreground space-x-2">
+          <span>&copy; {year} sweep-drop</span>
+          <span>•</span>
+          <a className="underline underline-offset-4" href="mailto:contact@sweep-drop.com">contact@sweep-drop.com</a>
+          <span>•</span>
+          <Link className="hover:underline underline-offset-4" href="/privacy">Privacy</Link>
+          <span>•</span>
+          <Link className="hover:underline underline-offset-4" href="/terms">Terms</Link>
+          <span>•</span>
+          <Link className="hover:underline underline-offset-4" href="/data-deletion">Data Deletion</Link>
+        </p>
+      </div>
+    </footer>
+  )
 }

@@ -20,8 +20,8 @@ export default async function Layout({ children }: { children: React.ReactNode }
   return (
     <div className="flex flex-1 flex-col">
       <Header user={user} profile={profile as Profile} showStats={true} />
-      <div className="w-full max-w-7xl mx-auto">
-        <main className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 py-8">{children}</main>
+      <div className="w-full max-w-7xl mx-auto overflow-x-hidden">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 md:px-8 py-8 under-header mt-3 sm:mt-4">{children}</main>
       </div>
     </div>
   );

@@ -30,9 +30,11 @@ export default async function Layout({ children }: { children: React.ReactNode }
       <MainSidebarUI>
         <MainSidebarNav isAdmin={isAdmin} />
       </MainSidebarUI>
-      <div className="flex flex-1 flex-col sm:pl-60">
+      <div className="flex flex-1 flex-col">
         <Header user={user} profile={profile as Profile} />
-        <main className="flex-1 overflow-y-auto p-4 sm:px-6">{children}</main>
+        <div className="w-full max-w-[1400px] sm:pl-60">
+          <main className="flex-1 overflow-y-auto overflow-x-hidden px-5 py-5 under-header admin-fit mt-3 sm:mt-4">{children}</main>
+        </div>
       </div>
     </div>
   );

@@ -4,6 +4,8 @@
 
 @layer base {
   :root {
+    /* Fixed header height (Header.tsx -> h-14) */
+    --app-header-height: 3.5rem;
     --background: 222 84% 5%;
     --foreground: 210 40% 98%;
     --card: 226 50% 12%;
@@ -42,6 +44,8 @@
   }
 
   .dark {
+    /* Keep a copy in dark scope for clarity (same value) */
+    --app-header-height: 3.5rem;
     --background: 222 84% 5%;
     --foreground: 210 40% 98%;
     --card: 226 50% 12%;
@@ -78,8 +82,21 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground overflow-x-hidden;
     background-image: radial-gradient(ellipse at top, hsl(222 44% 15%), hsl(var(--background)) 70%);
+  }
+}
+
+/* Generic helpers for layouts with fixed header */
+@layer utilities {
+  /* Adds top padding equal to header height so content doesn't hide under fixed header */
+  .under-header {
+    padding-top: var(--app-header-height);
+  }
+
+  /* Ensures the primary content area can fill the viewport below the header */
+  .admin-fit {
+    min-height: calc(100dvh - var(--app-header-height));
   }
 }
 
@@ -90,6 +107,19 @@
   .no-scrollbar {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
+  }
+  /* Sticky element that stays just under the fixed header within scrollable <main> */
+  .sticky-under-header {
+    position: sticky;
+    top: 0; /* works with .under-header padding on the scroll container */
+    z-index: 20;
+  }
+
+  /* Second sticky row that sits right under the SectionHeader */
+  .sticky-under-header-2 {
+    position: sticky;
+    top: 6.5rem; /* approximate header block height */
+    z-index: 19;
   }
 }
 

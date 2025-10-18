@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/lib/supabase/client';
 import type { Provider } from '@supabase/supabase-js';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" {...props}>
@@ -46,6 +46,10 @@ export default function LoginPage() {
   const [resetEmail, setResetEmail] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [isOauthLoading, setIsOauthLoading] = useState<Provider | null>(null);
 
   useEffect(() => {
     const ref = searchParams.get('ref');
@@ -55,15 +59,14 @@ export default function LoginPage() {
   }, [searchParams]);
 
   const getURL = () => {
-    const isBrowser = typeof window !== 'undefined';
     let url =
-      process?.env?.NEXT_PUBLIC_SITE_URL ??
-      (isBrowser ? window.location.origin : undefined) ??
-      process?.env?.NEXT_PUBLIC_VERCEL_URL;
-    // Ensure protocol
-    url = url.includes('http') ? url : `https://${url}`;
-    // Ensure trailing slash
-    url = url.endsWith('/') ? url : `${url}/`;
+      process.env.NEXT_PUBLIC_SITE_URL ??
+      process.env.NEXT_PUBLIC_VERCEL_URL ??
+      '';
+
+    if (!url) url = 'https://sweep-drop.com'; // default production domain
+    if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
+    if (!url.endsWith('/')) url = `${url}/`;
     return url;
   };
 
@@ -91,31 +94,33 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    if (isLoggingIn) return;
+    setIsLoggingIn(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: error.message,
-      });
+      const description = error.status === 429
+        ? 'Too many attempts. Please wait a moment and try again.'
+        : error.message;
+      toast({ variant: 'destructive', title: 'Login Failed', description });
     } else {
       router.push('/dashboard');
       router.refresh();
     }
+    setIsLoggingIn(false);
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isRegistering) return;
+    setIsRegistering(true);
     if (password !== confirmPassword) {
       toast({
         variant: "destructive",
         title: "Registration Failed",
         description: "Passwords do not match.",
       });
+      setIsRegistering(false);
       return;
     }
 
@@ -136,7 +141,7 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: "Registration Failed",
-        description: error.message,
+        description: error.status === 429 ? 'Too many attempts. Please wait a moment and try again.' : error.message,
       });
     } else {
       toast({
@@ -148,9 +153,12 @@ export default function LoginPage() {
       }
       setMode('login'); // Switch back to login view
     }
+    setIsRegistering(false);
   };
 
   const socialLogin = async (provider: Provider) => {
+    if (isOauthLoading) return;
+    setIsOauthLoading(provider);
      const referralCode = localStorage.getItem('referral_code');
     const redirectTo = getCallbackURL();
     const { error } = await supabase.auth.signInWithOAuth({
@@ -166,13 +174,16 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: "Social Login Failed",
-        description: error.message,
+        description: error.status === 429 ? 'Too many attempts. Please wait a moment and try again.' : error.message,
       });
     }
+    setIsOauthLoading(null);
   }
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isResetting) return;
+    setIsResetting(true);
     const redirectTo = `${getCallbackURL()}?next=/update-password`;
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo,
@@ -190,6 +201,7 @@ export default function LoginPage() {
             description: `If an account with ${resetEmail} exists, a password reset link has been sent.`,
         });
     }
+    setIsResetting(false);
   }
 
   return (
@@ -207,11 +219,11 @@ export default function LoginPage() {
               {mode === 'login' ? (
                 <>
                     <div className="grid grid-cols-2 gap-4">
-                        <Button variant="outline" onClick={() => socialLogin('google')}>
+                        <Button variant="outline" onClick={() => socialLogin('google')} disabled={!!isOauthLoading}>
                         <GoogleIcon className="mr-2 h-4 w-4" />
                         Google
                         </Button>
-                        <Button variant="outline" onClick={() => socialLogin('facebook')}>
+                        <Button variant="outline" onClick={() => socialLogin('facebook')} disabled={!!isOauthLoading}>
                         <FacebookIcon className="mr-2 h-4 w-4" />
                         Facebook
                         </Button>
@@ -285,8 +297,8 @@ export default function LoginPage() {
                             </Link>
                         </Label>
                         </div>
-                        <Button type="submit" className="w-full">
-                        Log in
+                        <Button type="submit" className="w-full" disabled={isLoggingIn}>
+                        {isLoggingIn ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Logging in...</> : 'Log in'}
                         </Button>
                     </form>
                     <p className="mt-4 text-center text-sm text-muted-foreground">
@@ -343,8 +355,8 @@ export default function LoginPage() {
                         </Link>
                     </Label>
                     </div>
-                    <Button type="submit" className="w-full">
-                    Register
+                    <Button type="submit" className="w-full" disabled={isRegistering}>
+                    {isRegistering ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Registering...</> : 'Register'}
                     </Button>
                     <p className="mt-4 text-center text-sm text-muted-foreground">
                         Already have an account?{' '}

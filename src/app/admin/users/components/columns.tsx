@@ -113,7 +113,7 @@ export const columns: ColumnDef<UserData>[] = [
   },
   {
     id: "actions",
-    header: () => <div className="font-semibold text-right w-[200px]">Actions</div>,
+    header: () => <div className="font-semibold text-right w-[120px] sm:w-[200px]">Actions</div>,
     cell: ({ row }) => {
       const user = row.original
       return <div className="flex justify-end"><UserActions user={user} /></div>

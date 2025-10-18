@@ -107,7 +107,7 @@ export function AdminManagement({ initialAdmins }: AdminManagementProps) {
   };
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="grid gap-6 md:grid-cols-2 overflow-x-hidden">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -118,21 +118,21 @@ export function AdminManagement({ initialAdmins }: AdminManagementProps) {
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex items-end gap-2">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
-                  <FormItem className="flex-grow">
+                  <FormItem className="flex-1">
                     <FormLabel className="sr-only">Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="user@example.com" {...field} />
+                      <Input placeholder="user@example.com" {...field} className="w-full" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Grant
               </Button>
@@ -182,7 +182,7 @@ export function AdminManagement({ initialAdmins }: AdminManagementProps) {
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
-                            variant="destructive"
+                            className="bg-red-600 text-white hover:bg-red-700"
                             onClick={() => handleRevoke(admin.id, admin.email)}
                           >
                             Revoke
