@@ -3,6 +3,7 @@
 import { Progress } from '@/components/ui/progress';
 import { Casino, CasinoStatus, UserCasino } from '@/lib/types';
 import { computeBonusTotals, effectiveStatusForToday } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
 import { GcCoinIcon, ScCoinIcon } from '../icons';
 
@@ -13,6 +14,8 @@ interface DailyTrackerHeaderProps {
 
 export function DailyTrackerHeader({ casinos, userCasinos }: DailyTrackerHeaderProps) {
   const [timeLeft, setTimeLeft] = useState('--:--:--');
+  const [liveCasinos, setLiveCasinos] = useState<Casino[]>(casinos);
+  const [liveUserCasinos, setLiveUserCasinos] = useState<UserCasino[]>(userCasinos);
 
   useEffect(() => {
     const calculateTimeLeft = () => {
@@ -39,6 +42,39 @@ export function DailyTrackerHeader({ casinos, userCasinos }: DailyTrackerHeaderP
     return () => clearInterval(interval);
   }, []);
 
+  // Live sync: fetch + subscribe + react to local events
+  useEffect(() => {
+    const supabase = createClient();
+    let mounted = true;
+    const fetchData = async () => {
+      const { data: casinoData } = await supabase.from('casinos').select('*');
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: userCasinoData } = user
+        ? await supabase.from('user_casinos').select('*').eq('user_id', user.id)
+        : { data: [] as UserCasino[] };
+      if (!mounted) return;
+      setLiveCasinos(casinoData || []);
+      setLiveUserCasinos(userCasinoData || []);
+    };
+    fetchData();
+    const ch1 = supabase
+      .channel('dth-casinos')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'casinos' }, fetchData)
+      .subscribe();
+    const ch2 = supabase
+      .channel('dth-user-casinos')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_casinos' }, fetchData)
+      .subscribe();
+    const onLocal = () => fetchData();
+    if (typeof window !== 'undefined') window.addEventListener('usercasinos:changed', onLocal);
+    return () => {
+      mounted = false;
+      supabase.removeChannel(ch1);
+      supabase.removeChannel(ch2);
+      if (typeof window !== 'undefined') window.removeEventListener('usercasinos:changed', onLocal);
+    };
+  }, []);
+
   const {
     scCollected: collectedScToday,
     scTotal: totalScToday,
@@ -48,7 +84,7 @@ export function DailyTrackerHeader({ casinos, userCasinos }: DailyTrackerHeaderP
     scCardsTotal: totalScCards,
     gcCardsCollected: collectedGcCards,
     gcCardsTotal: totalGcCards,
-  } = computeBonusTotals(casinos, userCasinos);
+  } = computeBonusTotals(liveCasinos, liveUserCasinos);
 
 
   const formatGc = (amount: number) => {

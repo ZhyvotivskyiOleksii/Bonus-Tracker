@@ -25,36 +25,18 @@ export async function middleware(request: NextRequest) {
   // Guard: if incoming Cookie header exceeds threshold, prune non-essential cookies
   const cookieHeader = request.headers.get('cookie') || '';
   if (byteLength(cookieHeader) > MAX_COOKIE_HEADER_BYTES) {
-
     const all = request.cookies.getAll();
     const keep = new Set<string>();
-    const supabaseCookies: { name: string; value: string }[] = [];
     for (const c of all) {
-      if (c.name.startsWith('sb-')) {
-        supabaseCookies.push({ name: c.name, value: c.value });
-        keep.add(c.name);
-      } else if (c.name === 'referral_code') {
+      // Never touch Supabase cookies; they are critical for auth
+      if (c.name.startsWith('sb-') || c.name === 'referral_code') {
         keep.add(c.name);
       }
     }
-
-    // If почему‑то накопилось больше 2 supabase‑кук, оставим самые длинные две
-    if (supabaseCookies.length > 2) {
-      supabaseCookies
-        .sort((a, b) => b.value.length - a.value.length)
-        .slice(2)
-        .forEach((c) => keep.delete(c.name));
-    }
-
-    // Delete everything, что не попало в keep
+    // Delete only явно лишние куки (всё, что не sb-* и не referral_code)
     for (const c of all) {
       if (!keep.has(c.name)) {
-        response.cookies.set({
-          name: c.name,
-          value: '',
-          path: '/',
-          maxAge: 0,
-        });
+        response.cookies.set({ name: c.name, value: '', path: '/', maxAge: 0 });
       }
     }
   }

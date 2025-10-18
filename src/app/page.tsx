@@ -15,26 +15,24 @@ export default function Home() {
       <LandingHeader />
       <main className="flex-1">
         {/* Section 1: Hero */}
-        <section className="w-full py-14 md:py-24 bg-card relative overflow-hidden">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_60%_at_0%_0%,hsl(var(--primary)/0.12),transparent_55%)]" />
-          <div className="container px-4 md:px-6 relative">
-            <div className="grid gap-10 lg:grid-cols-[1.1fr_480px] lg:gap-12">
-              <div className="flex flex-col justify-center space-y-6">
+        <section className="w-full py-14 md:py-24 relative overflow-hidden">
+          <div className="container max-w-[1280px] px-4 md:px-6 relative">
+            <div className="grid gap-8 sm:gap-10 lg:grid-cols-[minmax(680px,1fr)_560px] xl:grid-cols-[minmax(760px,1fr)_600px] lg:gap-6 xl:gap-8">
+              <div className="flex flex-col justify-center items-center space-y-6">
                 <div className="space-y-4">
-                  <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl xl:text-6xl/none">
-                    Track daily casino bonuses and never miss rewards
+                  <h1 className="mx-auto max-w-[900px] xl:max-w-[980px] text-5xl sm:text-6xl lg:text-6xl xl:text-7xl font-extrabold tracking-tight leading-[1.02] text-center">
+                    <span className="text-white/95">Track daily casino bonuses </span>
+                    <span className="block bg-clip-text text-transparent bg-[linear-gradient(90deg,hsl(var(--primary))_0%,hsl(var(--primary)/0.8)_35%,hsl(0_0%_100%/_0.95)_100%)]">
+                      and never miss rewards
+                    </span>
                   </h1>
-                  <p className="max-w-[650px] text-muted-foreground md:text-lg">
+                  <p className="max-w-[700px] text-muted-foreground md:text-lg text-center">
                     sweep-drop keeps your bonuses organized, reminds you when they reset, and shows your progress at a glance.
                     Simple, fast, and designed for everyday use.
                   </p>
-                  <ul className="grid gap-2 text-sm text-muted-foreground">
-                    <li className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-primary inline-block"/> Daily SC/GC progress with reset timer</li>
-                    <li className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-primary inline-block"/> Smart ordering and priority casinos on top</li>
-                    <li className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-primary inline-block"/> Optional push alerts so you won’t forget</li>
-                  </ul>
+                  {/* feature bullets moved to floating cards below */}
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Button asChild size="lg">
                     <Link href="/login">Get Started</Link>
                   </Button>
@@ -43,24 +41,54 @@ export default function Home() {
                   </Button>
                 </div>
               </div>
-              {heroImage && (
+              <div className="lg:order-last flex justify-center lg:justify-end lg:-ml-6 xl:-ml-8">
                 <Image
-                  src={heroImage.imageUrl}
-                  alt="App preview"
-                  width={720}
-                  height={540}
-                  data-ai-hint={heroImage.imageHint}
-                  className="mx-auto aspect-video overflow-hidden rounded-2xl ring-1 ring-border/60 object-cover sm:w-full lg:order-last lg:aspect-[4/3]"
+                  src="/image/hero-img.png"
+                  alt="sweep-drop hero"
+                  width={1100}
+                  height={740}
+                  className="w-[96%] max-w-[600px] h-auto rounded-3xl object-contain drop-shadow-2xl mx-auto"
                   priority
                 />
-              )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Quick floating features just below hero */}
+        <section className="relative -mt-12 sm:-mt-16 z-10">
+          <div className="container max-w-[1280px] px-4 md:px-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 place-items-center gap-4 md:gap-6">
+              {[{
+                icon: BarChart,
+                title: 'Daily progress',
+                desc: 'SC/GC with reset timer',
+              }, {
+                icon: Zap,
+                title: 'Smart ordering',
+                desc: 'Priority casinos on top',
+              }, {
+                icon: Bell,
+                title: 'Push alerts',
+                desc: 'So you won’t forget',
+              }].map((f, i) => (
+                <Card key={i} className="w-full max-w-[360px] bg-card/70 backdrop-blur-md rounded-2xl shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)] hover:shadow-[0_30px_70px_-20px_rgba(0,0,0,0.65)] hover:-translate-y-1 transition-all">
+                  <CardContent className="p-6 flex items-center justify-between gap-4">
+                    <div className="flex-1 text-center">
+                      <div className="text-base md:text-lg font-semibold leading-tight">{f.title}</div>
+                      <p className="text-sm text-muted-foreground">{f.desc}</p>
+                    </div>
+                    <f.icon className="h-8 w-8 sm:h-9 sm:w-9 text-primary flex-shrink-0" />
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </section>
 
         {/* Section 2: Features & How it works */}
         <section id="features" className="w-full py-16 md:py-24">
-          <div className="container px-4 md:px-6">
+          <div className="container max-w-[1280px] px-4 md:px-6">
             <div className="text-center space-y-3">
               <div className="inline-block rounded-lg bg-muted px-3 py-1 text-xs tracking-wide">Why sweep-drop</div>
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Everything you need, zero clutter</h2>

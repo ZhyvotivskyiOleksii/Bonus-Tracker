@@ -83,7 +83,20 @@
   }
   body {
     @apply bg-background text-foreground overflow-x-hidden;
-    background-image: radial-gradient(ellipse at top, hsl(222 44% 15%), hsl(var(--background)) 70%);
+    /* Sitewide dark, foggy gradient backdrop */
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(1200px 800px at -10% -10%, hsl(0 0% 0% / 0.55), transparent 60%),
+      radial-gradient(900px 700px at 15% 25%, hsl(0 0% 0% / 0.35), transparent 55%),
+      radial-gradient(1000px 700px at 110% 0%, hsl(0 0% 0% / 0.45), transparent 60%),
+      radial-gradient(800px 600px at 0% 105%, hsl(0 0% 0% / 0.55), transparent 60%),
+      radial-gradient(900px 600px at 100% 100%, hsl(0 0% 0% / 0.60), transparent 60%),
+      /* subtle brand tint */
+      radial-gradient(900px 650px at 75% 20%, hsl(var(--primary) / 0.10), transparent 60%),
+      radial-gradient(800px 600px at 25% 80%, hsl(var(--primary) / 0.07), transparent 60%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: auto;
   }
 }
 
@@ -157,4 +170,208 @@
 @keyframes shine-animation {
   0% { transform: translateX(-150%) skewX(-30deg); }
   100% { transform: translateX(150%) skewX(-30deg); }
+}
+
+/* sweep-drop loader (animated clipping boxes) */
+.sd-loader {
+  width: 200px;
+  height: 200px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.sd-box-wrap {
+  width: 70%;
+  height: 70%;
+  margin: calc((100% - 70%) / 2) auto;
+  position: relative;
+  transform: rotate(-45deg);
+}
+.sd-box {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: linear-gradient(
+    90deg,
+    hsl(var(--primary)) 0%,
+    hsl(var(--primary) / 0.8) 30%,
+    hsl(0 0% 100% / 0.7) 60%,
+    hsl(var(--primary) / 0.8) 85%,
+    hsl(var(--primary)) 100%
+  );
+  background-position: 0% 50%;
+  background-size: 1000% 1000%;
+  visibility: hidden;
+  border-radius: 8px;
+}
+.sd-box.one { animation: sd-moveGradient 15s infinite, sd-oneMove 3.5s infinite; }
+.sd-box.two { animation: sd-moveGradient 15s infinite, sd-twoMove 3.5s .15s infinite; }
+.sd-box.three { animation: sd-moveGradient 15s infinite, sd-threeMove 3.5s .3s infinite; }
+.sd-box.four { animation: sd-moveGradient 15s infinite, sd-fourMove 3.5s .575s infinite; }
+.sd-box.five { animation: sd-moveGradient 15s infinite, sd-fiveMove 3.5s .725s infinite; }
+.sd-box.six { animation: sd-moveGradient 15s infinite, sd-sixMove 3.5s .875s infinite; }
+
+@keyframes sd-moveGradient { to { background-position: 100% 50% } }
+
+@keyframes sd-oneMove {
+  0% { visibility: visible; clip-path: inset(0% 35% 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  14.2857% { clip-path: inset(0% 35% 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  28.5714% { clip-path: inset(35% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  42.8571% { clip-path: inset(35% 70% 35% 0 round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  57.1428% { clip-path: inset(35% 70% 35% 0 round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  71.4285% { clip-path: inset(0% 70% 70% 0 round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  85.7142% { clip-path: inset(0% 70% 70% 0 round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  100% { clip-path: inset(0% 35% 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+}
+
+@keyframes sd-twoMove {
+  0% { visibility: visible; clip-path: inset(0% 70% 70% 0 round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  14.2857% { clip-path: inset(0% 70% 70% 0 round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  28.5714% { clip-path: inset(0% 35% 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  42.8571% { clip-path: inset(0% 35% 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  57.1428% { clip-path: inset(35% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  71.4285% { clip-path: inset(35% 70% 35% 0 round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  85.7142% { clip-path: inset(35% 70% 35% 0 round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  100% { clip-path: inset(0% 70% 70% 0 round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+}
+
+@keyframes sd-threeMove {
+  0% { visibility: visible; clip-path: inset(35% 70% 35% 0 round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  14.2857% { clip-path: inset(35% 70% 35% 0 round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  28.5714% { clip-path: inset(0% 70% 70% 0 round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  42.8571% { clip-path: inset(0% 70% 70% 0 round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  57.1428% { clip-path: inset(0% 35% 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  71.4285% { clip-path: inset(0% 35% 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  85.7142% { clip-path: inset(35% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  100% { clip-path: inset(35% 70% 35% 0 round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+}
+
+@keyframes sd-fourMove {
+  0% { visibility: visible; clip-path: inset(35% 0% 35% 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  14.2857% { clip-path: inset(35% 0% 35% 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  28.5714% { clip-path: inset(35% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  42.8571% { clip-path: inset(70% 35% 0% 35% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  57.1428% { clip-path: inset(70% 35% 0% 35% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  71.4285% { clip-path: inset(70% 0 0 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  85.7142% { clip-path: inset(70% 0 0 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  100% { clip-path: inset(35% 0% 35% 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+}
+
+@keyframes sd-fiveMove {
+  0% { visibility: visible; clip-path: inset(70% 0 0 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  14.2857% { clip-path: inset(70% 0 0 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  28.5714% { clip-path: inset(35% 0% 35% 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  42.8571% { clip-path: inset(35% 0% 35% 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  57.1428% { clip-path: inset(35% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  71.4285% { clip-path: inset(70% 35% 0% 35% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  85.7142% { clip-path: inset(70% 35% 0% 35% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  100% { clip-path: inset(70% 0 0 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+}
+
+@keyframes sd-sixMove {
+  0% { visibility: visible; clip-path: inset(70% 35% 0% 35% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  14.2857% { clip-path: inset(70% 35% 0% 35% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  28.5714% { clip-path: inset(70% 0 0 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  42.8571% { clip-path: inset(70% 0 0 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  57.1428% { clip-path: inset(35% 0% 35% 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  71.4285% { clip-path: inset(35% 0% 35% 70% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  85.7142% { clip-path: inset(35% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+  100% { clip-path: inset(70% 35% 0% 35% round 5%); animation-timing-function: cubic-bezier(0.86,0,0.07,1) }
+}
+
+/* gentle animated fog for login */
+.fog-bg {
+  background-image:
+    radial-gradient(700px 500px at 10% 10%, hsl(var(--primary) / 0.12), transparent 60%),
+    radial-gradient(800px 600px at 90% 0%, hsl(0 0% 0% / 0.38), transparent 60%),
+    radial-gradient(900px 650px at 0% 100%, hsl(var(--primary) / 0.10), transparent 60%),
+    radial-gradient(800px 600px at 100% 100%, hsl(0 0% 0% / 0.4), transparent 60%);
+  background-size: 140% 140%, 160% 160%, 150% 150%, 160% 160%;
+  animation: fog-move 26s ease-in-out infinite alternate;
+}
+
+/* Stack loader (3D rotating cards) */
+.stack {
+  --stack-dur: 2s;
+  --stack-delay: 0.05;
+  --stack-spacing: 15%;
+  position: relative;
+  width: 14em;
+  height: 32em;
+  perspective: 800px;
+}
+.stack__card {
+  aspect-ratio: 1 / 1;
+  position: absolute;
+  inset: 0;
+  top: var(--stack-spacing);
+  margin: auto;
+  width: 70%;
+  transform: rotateX(45deg) rotateZ(-45deg);
+  transform-style: preserve-3d;
+}
+.stack__card::before {
+  animation: stack-card var(--stack-dur) infinite;
+  background-color: hsl(var(--primary) / 0.55);
+  border-radius: 10px;
+  box-shadow: -0.5em 0.5em 1.5em hsl(0 0% 0% / 0.15);
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.stack__card:nth-child(2) { top: 0 }
+.stack__card:nth-child(2)::before {
+  animation-delay: calc(var(--stack-dur) * (-1 + var(--stack-delay)));
+  background-color: hsl(var(--primary) / 0.35);
+}
+.stack__card:nth-child(3) { top: calc(var(--stack-spacing) * -1) }
+.stack__card:nth-child(3)::before {
+  animation-delay: calc(var(--stack-dur) * (-1 + var(--stack-delay) * 2));
+  background-color: hsl(var(--primary) / 0.15);
+  background-image: url('/image/logo.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 45% 45%;
+}
+
+@keyframes stack-card {
+  0%, 100% { transform: translateZ(0); opacity: 1; }
+  11% { transform: translateZ(0.5em); opacity: 1; }
+  34% { transform: translateZ(-12em); opacity: 0; }
+  48% { transform: translateZ(12em); opacity: 0; }
+  57% { transform: translateZ(0); opacity: 1; }
+  61% { transform: translateZ(-1.8em); }
+  74% { transform: translateZ(0.6em); }
+  87% { transform: translateZ(-0.2em); }
+}
+
+@keyframes fog-move {
+  0% { background-position: 0% 0%, 100% 0%, 0% 100%, 100% 100%; }
+  50% { background-position: 15% 5%, 85% 10%, 10% 90%, 90% 95%; }
+  100% { background-position: 0% 0%, 100% 0%, 0% 100%, 100% 100%; }
+}
+
+/* Glass panel utility for auth card */
+.glass-card {
+  border: 1px solid transparent;
+  border-radius: 16px;
+  background:
+    linear-gradient(to bottom, hsl(var(--background) / 0.55), hsl(var(--background) / 0.38)) padding-box,
+    linear-gradient(135deg, hsl(var(--primary) / 0.28), hsl(0 0% 100% / 0.12)) border-box;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  position: relative;
+  overflow: hidden;
+}
+.glass-card:after {
+  content: '';
+  position: absolute;
+  inset: -20% -10% auto -10%;
+  height: 50%;
+  background: radial-gradient(800px 400px at 20% 0%, hsl(var(--primary) / 0.15), transparent 60%);
+  pointer-events: none;
 }

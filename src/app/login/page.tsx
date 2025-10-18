@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -205,16 +206,17 @@ export default function LoginPage() {
   }
 
   return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="relative flex min-h-screen items-center justify-center bg-background p-4 overflow-hidden">
+        <div className="fog-bg absolute inset-0 pointer-events-none" />
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
-              <AppLogo className="mx-auto h-12 w-12 text-primary" />
+              <Image src="/image/logo.png" alt="sweep-drop" width={160} height={36} className="mx-auto h-10 w-auto" />
               <h1 className="mt-6 text-3xl font-bold tracking-tight text-foreground">
                   {mode === 'login' ? 'Log in to your account' : 'Create an account'}
               </h1>
           </div>
 
-          <Card className="shadow-2xl">
+          <Card className="glass-card shadow-[0_30px_80px_-20px_rgba(0,0,0,0.6)]">
             <CardContent className="p-8 space-y-6">
               {mode === 'login' ? (
                 <>
@@ -368,7 +370,7 @@ export default function LoginPage() {
               )}
             </CardContent>
           </Card>
-        </div>
       </div>
+    </div>
   );
 }

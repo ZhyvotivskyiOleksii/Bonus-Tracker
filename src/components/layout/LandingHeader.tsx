@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { AppLogo } from '../icons';
+import Image from 'next/image';
 
 export function LandingHeader() {
   return (
-    <header className="px-4 lg:px-6 h-14 flex items-center bg-card border-b">
+    <header className="sticky top-0 z-40 px-4 lg:px-6 h-14 flex items-center bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/60">
       <Link href="/" className="flex items-center justify-center gap-2">
-        <AppLogo className="h-6 w-6 text-primary" />
+        <Image src="/image/logo.png" alt="sweep-drop" width={130} height={28} className="h-7 w-auto" />
         <span className="text-sm font-semibold tracking-tight text-foreground">sweep-drop</span>
       </Link>
       <nav className="ml-auto flex gap-4 sm:gap-6">

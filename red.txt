@@ -6,6 +6,21 @@ ClqVVFoUW0mMxfLbq6
 
 
 
-==================================
+============Залить файлы:======================
 
 
+rsync -avz --delete \
+  --exclude ".next" \
+  --exclude "node_modules" \
+  "/Users/oleksiizhyvotivskyi/Desktop/Bonus-Tracker/" \
+  root@45.148.244.75:/home/bugsy/sweep-drop.com/
+
+
+============На сервере пересобрать======================
+ssh root@45.148.244.75 'su - bugsy -c "
+  [ -s ~/.nvm/nvm.sh ] && . ~/.nvm/nvm.sh && nvm use 22.20.0 >/dev/null
+  cd /home/bugsy/sweep-drop.com
+  npm ci --no-audit --no-fund
+  NODE_ENV=production npm run build
+  pm2 reload sweep-drop
+"'

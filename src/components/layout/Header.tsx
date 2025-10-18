@@ -5,7 +5,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Menu, Bell, Loader2, CheckCheck, X } from 'lucide-react';
 import Link from 'next/link';
 import { MainSidebarNav } from './MainSidebarNav';
-import { AppLogo } from '../icons';
+import Image from 'next/image';
 import type { User } from '@supabase/supabase-js';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
@@ -146,25 +146,26 @@ export function Header({ user, profile, showStats = false }: { user: User, profi
                     <SheetTitle>Mobile Menu</SheetTitle>
                   </VisuallyHidden>
                 </SheetHeader>
-                <nav className="grid gap-6 text-sm font-medium">
+                <nav className="grid gap-6 text-sm font-medium pr-10 pt-1">
                     <Link
                         href="/dashboard"
-                        className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
+                        className="inline-flex items-center gap-2 self-start ml-2 mt-1 mr-4 px-1.5 py-1 rounded-md text-foreground/90 hover:text-foreground"
                     >
-                        <AppLogo className="h-5 w-5 transition-all group-hover:scale-110" />
-                        <span className="sr-only">sweep-drop</span>
+                        <Image src="/image/logo.png" alt="sweep-drop" width={18} height={18} className="h-4 w-auto" />
+                        <span className="font-semibold">sweep-drop</span>
                     </Link>
                     <MainSidebarNav isAdmin={isAdmin} />
                 </nav>
             </SheetContent>
             </Sheet>
         )}
+        {/* Brand: hide on mobile, show logo + name on desktop */}
         <Link
           href="/dashboard"
-          className="group flex h-9 shrink-0 items-center gap-2 rounded-full bg-primary px-3 text-lg font-semibold text-primary-foreground md:h-8 md:text-base self-start"
+          className="hidden md:flex h-9 shrink-0 items-center gap-2 self-start"
         >
-          <AppLogo className="h-4 w-4 transition-all group-hover:scale-110" />
-          <span className="hidden sm:inline">sweep-drop</span>
+          <Image src="/image/logo.png" alt="sweep-drop" width={120} height={28} className="h-7 w-auto" />
+          <span className="ml-1 font-semibold tracking-tight">sweep-drop</span>
         </Link>
        </div>
       
@@ -192,8 +193,8 @@ export function Header({ user, profile, showStats = false }: { user: User, profi
                       )}
                   </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-96 p-0">
-                  <div className="p-4 border-b flex justify-between items-center">
+              <PopoverContent className="w-[420px] p-0 bg-background/70 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden shadow-[0_30px_80px_-20px_rgba(0,0,0,0.45)]">
+                  <div className="p-4 border-b border-white/10 flex justify-between items-center bg-gradient-to-b from-white/5 to-transparent">
                     <h4 className="font-medium leading-none">Notifications</h4>
                      <Button 
                         variant="ghost" 
@@ -206,7 +207,7 @@ export function Header({ user, profile, showStats = false }: { user: User, profi
                         Mark all as read
                       </Button>
                   </div>
-                  <div className="flex flex-col gap-1 p-2 max-h-[400px] overflow-y-auto">
+                  <div className="flex flex-col gap-2 p-3 max-h-[420px] overflow-y-auto">
                       {isLoadingNotifications ? (
                         <div className="flex items-center justify-center p-4">
                           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -216,11 +217,11 @@ export function Header({ user, profile, showStats = false }: { user: User, profi
                           const isUnread = lastReadTimestamp ? new Date(n.created_at) > new Date(lastReadTimestamp) : true;
                           return (
                             <div key={n.id} className={cn(
-                              "group relative flex items-start gap-3 p-3 rounded-lg transition-colors hover:bg-muted/50",
-                              isUnread ? "bg-primary/10" : ""
+                              "group relative flex items-start gap-3 p-3 rounded-xl transition-all bg-card/40 hover:bg-card/60 backdrop-blur-sm border",
+                              isUnread ? "border-primary/30 ring-1 ring-primary/20" : "border-white/10"
                               )}>
-                              <div className="w-8 h-8 rounded-full bg-muted flex-shrink-0 flex items-center justify-center mt-1">
-                                  <Bell className="h-4 w-4 text-primary" />
+                              <div className="w-8 h-8 rounded-full bg-primary/15 flex-shrink-0 flex items-center justify-center mt-1">
+                                  <Bell className="h-4 w-4 text-primary"/>
                               </div>
                               <div className="flex-1">
                                   <p className="font-semibold text-sm">{n.title}</p>
@@ -264,24 +265,24 @@ export function Header({ user, profile, showStats = false }: { user: User, profi
                   </div>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="p-0 w-screen h-[100dvh] max-w-none bg-card flex flex-col">
-                <DialogHeader className="p-4 border-b">
+              <DialogContent className="p-0 w-screen h-[100dvh] max-w-none bg-background/80 backdrop-blur-md flex flex-col border-l border-white/10">
+                <DialogHeader className="p-4 border-b border-white/10 bg-gradient-to-b from-white/5 to-transparent">
                   <DialogTitle>Notifications</DialogTitle>
                   <DialogDescription className="sr-only">Your recent alerts</DialogDescription>
                 </DialogHeader>
-                <div className="p-2 flex justify-end">
+                <div className="px-2 py-1 flex justify-end">
                   <Button 
                     variant="ghost" 
                     size="sm" 
                     onClick={handleMarkAllAsRead} 
                     disabled={!hasNewNotification || isMarkingAsRead}
-                    className="text-xs text-muted-foreground hover:text-primary"
+                    className="h-7 px-2.5 text-[11px] text-muted-foreground hover:text-primary"
                   >
                     {isMarkingAsRead ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <CheckCheck className="h-3 w-3 mr-1" />}
                     Mark all as read
                   </Button>
                 </div>
-                <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                <div className="flex-1 overflow-y-auto p-3 space-y-2">
                   {isLoadingNotifications ? (
                     <div className="flex items-center justify-center p-4">
                       <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -291,10 +292,10 @@ export function Header({ user, profile, showStats = false }: { user: User, profi
                       const isUnread = lastReadTimestamp ? new Date(n.created_at) > new Date(lastReadTimestamp) : true;
                       return (
                         <div key={n.id} className={cn(
-                          "group relative flex items-start gap-3 p-3 rounded-lg transition-colors bg-card hover:bg-muted/50 border",
-                          isUnread ? "border-primary/40" : "border-border"
+                          "group relative flex items-start gap-3 p-3 rounded-xl transition-all bg-card/40 hover:bg-card/60 backdrop-blur-sm border",
+                          isUnread ? "border-primary/30 ring-1 ring-primary/20" : "border-white/10"
                         )}>
-                          <div className="w-8 h-8 rounded-full bg-muted flex-shrink-0 flex items-center justify-center mt-1">
+                          <div className="w-8 h-8 rounded-full bg-primary/15 flex-shrink-0 flex items-center justify-center mt-1">
                             <Bell className="h-4 w-4 text-primary" />
                           </div>
                           <div className="flex-1">

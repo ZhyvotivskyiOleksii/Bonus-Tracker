@@ -81,3 +81,43 @@ export async function getAffiliateLink(casinoId: string, casinoUrl: string): Pro
     return casinoUrl;
   }
 }
+
+// Force-mark a casino as collected for today for the current user (server-side, bypass RLS).
+export async function markCollectedToday(casinoId: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = createClient();
+  const profile = await getUserProfile();
+  if (!profile) return { success: false, error: 'Not authenticated' };
+  const userId = profile.id;
+  try {
+    // Figure out next status based on existing row
+    const { data: existing } = await supabase
+      .from('user_casinos')
+      .select('id, status')
+      .eq('user_id', userId)
+      .eq('casino_id', casinoId)
+      .maybeSingle();
+
+    const nextStatus = existing?.status === CasinoStatus.NotRegistered || !existing
+      ? CasinoStatus.Registered
+      : CasinoStatus.CollectedToday;
+
+    const supabaseAdmin = createAdminClient();
+    const nowIso = new Date().toISOString();
+    if (existing) {
+      const { error } = await supabaseAdmin
+        .from('user_casinos')
+        .update({ status: nextStatus, last_collected_at: nowIso })
+        .eq('id', existing.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseAdmin
+        .from('user_casinos')
+        .insert({ user_id: userId, casino_id: casinoId, status: nextStatus, last_collected_at: nowIso });
+      if (error) throw error;
+    }
+    return { success: true };
+  } catch (e: any) {
+    console.error('markCollectedToday failed:', e);
+    return { success: false, error: e?.message || 'Unknown error' };
+  }
+}

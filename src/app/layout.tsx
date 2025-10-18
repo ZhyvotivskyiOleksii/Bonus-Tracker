@@ -4,6 +4,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from "@/components/ui/toaster"
 import { AppInitializer } from '@/components/layout/AppInitializer';
+import { RouteLoader } from '@/components/layout/RouteLoader';
 
 export const metadata: Metadata = {
   title: 'sweep-drop',
@@ -32,6 +33,7 @@ export default function RootLayout({
         )}
       >
         <AppInitializer />
+        <RouteLoader />
         {children}
         <Toaster />
       </body>

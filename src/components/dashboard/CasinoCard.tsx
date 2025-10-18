@@ -7,7 +7,7 @@ import { cn, effectiveStatusForToday, isCollectedTodayNY, openInBackground, preO
 import type { Casino } from '@/lib/types';
 import { UserCasino, CasinoStatus } from '@/lib/types';
 import { Check, Loader2 } from 'lucide-react';
-import { getAffiliateLink } from '@/lib/actions';
+import { getAffiliateLink, markCollectedToday } from '@/lib/actions';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -29,6 +29,24 @@ export function CasinoCard({ casino, userCasino }: CasinoCardProps) {
     const supabase = createClient();
     let isMounted = true;
     (async () => {
+      // Ensure we hydrate status even if SSR userCasinos was empty
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: fresh } = await supabase
+            .from('user_casinos')
+            .select('status,last_collected_at')
+            .eq('user_id', user.id)
+            .eq('casino_id', casino.id)
+            .maybeSingle();
+          if (fresh && isMounted) {
+            const eff = effectiveStatusForToday(fresh.status as CasinoStatus, fresh.last_collected_at);
+            setCurrentStatus(eff);
+            setRawStatus(fresh.status as CasinoStatus);
+            setLastCollectedAt(fresh.last_collected_at);
+          }
+        }
+      } catch {}
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const channel = supabase
@@ -67,50 +85,48 @@ export function CasinoCard({ casino, userCasino }: CasinoCardProps) {
           // Fallback if popup blocked
           openInBackground(link);
         }
-        // Optimistically update local user_casinos to trigger realtime UI updates
-        try {
-          const supabase = createClient();
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            // If was not registered -> Registered (welcome collected today).
-            // Otherwise -> CollectedToday (daily collected today).
-            const newStatus = currentStatus === CasinoStatus.NotRegistered ? CasinoStatus.Registered : CasinoStatus.CollectedToday;
-            const { data: existing } = await supabase
-              .from('user_casinos')
-              .select('id, status, last_collected_at')
-              .eq('user_id', user.id)
-              .eq('casino_id', casino.id)
-              .maybeSingle();
-            if (existing) {
-              if (existing.status !== newStatus) {
+        // Persist on the server using service role (bypass RLS edge cases)
+        let persisted = false;
+        const res = await markCollectedToday(casino.id);
+        if (res?.success) {
+          persisted = true;
+        } else {
+          // Fallback: persist from client (no service role available in env)
+          try {
+            const supabase = createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              const newStatus = currentStatus === CasinoStatus.NotRegistered ? CasinoStatus.Registered : CasinoStatus.CollectedToday;
+              const nowIso = new Date().toISOString();
+              const { data: existing } = await supabase
+                .from('user_casinos')
+                .select('id,status')
+                .eq('user_id', user.id)
+                .eq('casino_id', casino.id)
+                .maybeSingle();
+              if (existing) {
                 await supabase
                   .from('user_casinos')
-                  .update({ status: newStatus, last_collected_at: new Date().toISOString() })
+                  .update({ status: newStatus, last_collected_at: nowIso })
                   .eq('id', existing.id);
+              } else {
+                await supabase
+                  .from('user_casinos')
+                  .insert({ user_id: user.id, casino_id: casino.id, status: newStatus, last_collected_at: nowIso });
               }
-            } else {
-              await supabase
-                .from('user_casinos')
-                .insert({
-                  user_id: user.id,
-                  casino_id: casino.id,
-                  status: newStatus,
-                  last_collected_at: new Date().toISOString(),
-                });
+              persisted = true;
             }
-            const nowIso = new Date().toISOString();
-            // UI: lock as collected for today regardless of Registered/Daily
-            setCurrentStatus(effectiveStatusForToday(newStatus, nowIso));
-            setRawStatus(newStatus);
-            setLastCollectedAt(nowIso);
-            // Notify other components to refresh (in case Realtime is not enabled)
-            if (typeof window !== 'undefined') {
-              window.dispatchEvent(new Event('usercasinos:changed'));
-            }
+          } catch (e) {
+            console.warn('Client fallback persist failed:', e);
           }
-        } catch (e) {
-          console.warn('Local realtime update failed (non-fatal):', e);
         }
+
+        const nowIso = new Date().toISOString();
+        const newStatus = currentStatus === CasinoStatus.NotRegistered ? CasinoStatus.Registered : CasinoStatus.CollectedToday;
+        setCurrentStatus(effectiveStatusForToday(newStatus, nowIso));
+        setRawStatus(newStatus);
+        setLastCollectedAt(nowIso);
+        if (persisted && typeof window !== 'undefined') window.dispatchEvent(new Event('usercasinos:changed'));
     } catch(e) {
         console.error(e);
     } finally {

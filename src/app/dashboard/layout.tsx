@@ -1,7 +1,10 @@
 import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import type { Profile } from '@/lib/types';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
   const supabase = createClient();
@@ -23,6 +26,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
       <div className="w-full max-w-7xl mx-auto overflow-x-hidden">
         <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 md:px-8 py-8 under-header mt-3 sm:mt-4">{children}</main>
       </div>
+      <Footer />
     </div>
   );
 }

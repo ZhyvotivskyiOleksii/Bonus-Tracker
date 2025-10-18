@@ -1,6 +1,8 @@
 import { CasinoCard } from '@/components/dashboard/CasinoCard';
 import { DailyTrackerHeader } from '@/components/dashboard/DailyTrackerHeader';
 import { CasinoStatus, type Casino, type UserCasino } from '@/lib/types';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
