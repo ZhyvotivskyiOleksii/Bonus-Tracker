@@ -8,6 +8,7 @@ import type { Casino } from '@/lib/types';
 import { UserCasino, CasinoStatus } from '@/lib/types';
 import { Check, Loader2 } from 'lucide-react';
 import { getAffiliateLink, markCollectedToday } from '@/lib/actions';
+import { registerCasinoForUser } from '@/lib/actions/user-actions';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -28,25 +29,32 @@ export function CasinoCard({ casino, userCasino }: CasinoCardProps) {
   useEffect(() => {
     const supabase = createClient();
     let isMounted = true;
-    (async () => {
-      // Ensure we hydrate status even if SSR userCasinos was empty
+
+    const refresh = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: fresh } = await supabase
-            .from('user_casinos')
-            .select('status,last_collected_at')
-            .eq('user_id', user.id)
-            .eq('casino_id', casino.id)
-            .maybeSingle();
-          if (fresh && isMounted) {
-            const eff = effectiveStatusForToday(fresh.status as CasinoStatus, fresh.last_collected_at);
-            setCurrentStatus(eff);
-            setRawStatus(fresh.status as CasinoStatus);
-            setLastCollectedAt(fresh.last_collected_at);
-          }
+        if (!user) return;
+        const { data: fresh } = await supabase
+          .from('user_casinos')
+          .select('status,last_collected_at')
+          .eq('user_id', user.id)
+          .eq('casino_id', casino.id)
+          .maybeSingle();
+        if (fresh && isMounted) {
+          const eff = effectiveStatusForToday(fresh.status as CasinoStatus, fresh.last_collected_at);
+          setCurrentStatus(eff);
+          setRawStatus(fresh.status as CasinoStatus);
+          setLastCollectedAt(fresh.last_collected_at);
         }
       } catch {}
+    };
+
+    // Initial hydration
+    refresh();
+
+    // Listen for Supabase realtime updates
+    let channelRef: any = null;
+    (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const channel = supabase
@@ -65,11 +73,19 @@ export function CasinoCard({ casino, userCasino }: CasinoCardProps) {
           }
         )
         .subscribe();
-      return () => {
-        supabase.removeChannel(channel);
-      };
+      channelRef = channel;
+      // Attach event fallback for environments without realtime
+      try {
+        window.addEventListener('user_casinos_changed', refresh);
+      } catch {}
+      return;
     })();
-    return () => { isMounted = false; };
+
+    return () => {
+      isMounted = false;
+      try { window.removeEventListener('user_casinos_changed', refresh as any); } catch {}
+      try { if (channelRef) supabase.removeChannel(channelRef); } catch {}
+    };
   }, [casino.id]);
 
   const handleActionClick = async () => {
@@ -134,6 +150,21 @@ export function CasinoCard({ casino, userCasino }: CasinoCardProps) {
     }
   };
 
+  const handleMarkRegistered = async () => {
+    setIsLoading(true);
+    try {
+      const res = await registerCasinoForUser(casino.id);
+      if (res.success) {
+        setRawStatus(CasinoStatus.Registered);
+        setCurrentStatus(CasinoStatus.Registered);
+        setLastCollectedAt(null);
+        try { window.dispatchEvent(new CustomEvent('user_casinos_changed')); } catch {}
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // At NY midnight, if previously collected, flip back to Registered automatically
   useEffect(() => {
     const id = setInterval(() => {
@@ -164,31 +195,64 @@ export function CasinoCard({ casino, userCasino }: CasinoCardProps) {
 
   const renderContent = () => {
     if (isNotRegistered) {
-        return (
-             <div className="space-y-4 text-center">
-                <div className="bg-foreground/5 rounded-lg p-3">
-                    <p className="text-xs uppercase text-muted-foreground font-semibold tracking-wider">Sign up offer</p>
-                    <p className="text-2xl font-bold leading-tight">
-                        <span className="text-status-sc">{formatSC(casino.welcome_sc)} SC</span>
-                        <span className="text-white/80 mx-1"> + </span>
-                        <span className="text-status-gc">{formatCoins(casino.welcome_gc)} GC</span>
-                    </p>
-                </div>
-                 <p className="text-xs text-muted-foreground px-4 mb-2">
-                    Register to add its <span className="font-bold text-foreground">{formatSC(casino.daily_sc)} SC daily bonus</span> to your tracker!
-                </p>
-            </div>
-        )
+      return (
+        <div className="space-y-4 text-center">
+          <div className="bg-foreground/5 rounded-lg p-3">
+            <p className="text-xs uppercase text-muted-foreground font-semibold tracking-wider">Sign up offer</p>
+            <p className="text-2xl font-bold leading-tight">
+              <span className="text-status-sc">{formatSC(casino.welcome_sc)} SC</span>
+              <span className="text-white/80 mx-1"> + </span>
+              <span className="text-status-gc">{formatCoins(casino.welcome_gc)} GC</span>
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground px-4 mb-2">
+            Register to add its <span className="font-bold text-foreground">{formatSC(casino.daily_sc)} SC daily bonus</span> to your tracker!
+          </p>
+        </div>
+      );
+    }
+
+    // Highlight for Get Bonus (Registered state): show a pill with label DAILY BONUS
+    if (currentStatus === CasinoStatus.Registered) {
+      return (
+        <div className="space-y-3 text-center">
+          <div className="bg-foreground/5 rounded-lg p-3">
+            <p className="text-xs uppercase text-muted-foreground font-semibold tracking-wider">Daily Bonus</p>
+            <p className="text-2xl font-bold leading-tight">
+              <span className={cn("text-status-sc")}>{formatSC(casino.daily_sc)} SC</span>
+              <span className="text-white/80 mx-1"> + </span>
+              <span className={cn("text-status-gc")}>{formatCoins(casino.daily_gc)} GC</span>
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground">Available once per day</p>
+        </div>
+      );
+    }
+
+    if (currentStatus === CasinoStatus.CollectedToday) {
+      return (
+        <div className="space-y-3 text-center">
+          <div className="bg-foreground/5 rounded-lg p-3">
+            <p className="text-xs uppercase text-muted-foreground font-semibold tracking-wider">Daily Bonus</p>
+            <p className="text-2xl font-bold leading-tight">
+              <span className={cn("text-status-sc")}>{formatSC(casino.daily_sc)} SC</span>
+              <span className="text-white/80 mx-1"> + </span>
+              <span className={cn("text-status-gc")}>{formatCoins(casino.daily_gc)} GC</span>
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground">Available once per day</p>
+        </div>
+      );
     }
 
     return (
-        <div className="text-center space-y-2">
-            <p className="text-3xl font-bold">
-                <span className={cn("text-status-sc")}>{formatSC(casino.daily_sc)} SC</span>
-                <span className="text-muted-foreground mx-1"> + </span>
-                <span className={cn("text-status-gc")}>{formatCoins(casino.daily_gc)} GC</span>
-            </p>
-        </div>
+      <div className="text-center space-y-2">
+        <p className="text-3xl font-bold">
+          <span className={cn("text-status-sc")}>{formatSC(casino.daily_sc)} SC</span>
+          <span className="text-muted-foreground mx-1"> + </span>
+          <span className={cn("text-status-gc")}>{formatCoins(casino.daily_gc)} GC</span>
+        </p>
+      </div>
     );
   }
 
@@ -208,30 +272,58 @@ export function CasinoCard({ casino, userCasino }: CasinoCardProps) {
 
     if (isRegistrationLock) {
       return (
-        <Button {...commonProps} disabled className="bg-primary/30 text-primary-foreground/80 cursor-not-allowed">
-          {buttonContent(null, 'Get Bonus')}
-        </Button>
+        <div className="w-[86%] sm:w-3/4 md:w-2/3 mx-auto">
+          <Button
+            {...commonProps}
+            disabled
+            className="w-full bg-blue-600/40 text-white/80 cursor-not-allowed border border-white/10"
+          >
+            {buttonContent(null, 'Get Bonus')}
+          </Button>
+        </div>
       );
     }
     switch (currentStatus) {
       case CasinoStatus.CollectedToday:
         return (
-          <Button variant="ghost" className={cn(commonProps.className, "bg-status-collected-button hover:bg-status-collected-button/90 text-white")} disabled>
-            <Check className="mr-2 h-5 w-5" />
-            Bonus Claimed
-          </Button>
+          <div className="w-[86%] sm:w-3/4 md:w-2/3 mx-auto">
+            <Button variant="ghost" className={cn("w-full", "bg-status-collected-button hover:bg-status-collected-button/90 text-white")} disabled>
+              <Check className="mr-2 h-5 w-5" />
+              Bonus Claimed
+            </Button>
+          </div>
         );
       case CasinoStatus.NotRegistered:
         return (
-          <Button {...commonProps} variant="default" className="bg-status-not-registered hover:bg-status-not-registered/90 text-white">
-            {buttonContent(null, 'Register Now')}
-          </Button>
+          <div className="w-[90%] sm:w-4/5 md:w-2/3 mx-auto flex flex-col gap-2">
+            <Button
+              {...commonProps}
+              variant="default"
+              className="w-full bg-status-not-registered hover:bg-status-not-registered/90 text-white"
+            >
+              {buttonContent(null, 'Register Now')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-9 text-sm border-blue-500/40 text-blue-200 bg-blue-500/10 hover:bg-blue-500/20"
+              onClick={handleMarkRegistered}
+              disabled={isLoading}
+            >
+              I already have an account
+            </Button>
+          </div>
         );
       case CasinoStatus.Registered:
         return (
-          <Button {...commonProps}>
-            {buttonContent(null, 'Get Bonus')}
-          </Button>
+          <div className="w-[86%] sm:w-3/4 md:w-2/3 mx-auto">
+            <Button
+              {...commonProps}
+              className="w-full bg-blue-600 hover:bg-blue-500 text-white shadow-[0_10px_30px_-10px_rgba(37,99,235,0.7)]"
+            >
+              {buttonContent(null, 'Get Bonus')}
+            </Button>
+          </div>
         );
       default:
         return null;
@@ -241,11 +333,11 @@ export function CasinoCard({ casino, userCasino }: CasinoCardProps) {
   const getCardClasses = () => {
     switch (currentStatus) {
       case CasinoStatus.NotRegistered:
-        return 'border-status-not-registered';
+        return 'border-status-not-registered bg-muted/20';
       case CasinoStatus.CollectedToday:
-        return isCollectedDaily ? 'border-status-collected-border' : 'border-border';
+        return isCollectedDaily ? 'border-status-collected-border bg-card/70' : 'border-border bg-card/70';
       default:
-        return 'border-border';
+        return 'border-border bg-card/90';
     }
   }
 

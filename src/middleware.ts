@@ -81,7 +81,21 @@ export async function middleware(request: NextRequest) {
   )
 
   // Refresh session if expired - required for Server Components
-  await supabase.auth.getUser()
+  try {
+    await supabase.auth.getUser()
+  } catch (e: any) {
+    // Handle invalid/expired refresh tokens gracefully instead of throwing
+    const code = e?.code || e?.message || ''
+    if (typeof code === 'string' && code.includes('refresh_token_not_found')) {
+      try { await supabase.auth.signOut() } catch {}
+      // Nudge client to login again but do not crash middleware
+      const url = new URL(request.url)
+      // Avoid infinite loop: if already on /login, just continue
+      if (!/\/login(\/?|$)/.test(url.pathname)) {
+        return NextResponse.redirect(new URL('/login', url))
+      }
+    }
+  }
 
   return response
 }

@@ -83,6 +83,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* Casino selection popup temporarily removed by request */}
       <DailyTrackerHeader casinos={casinos} userCasinos={userCasinos || []} />
 
       {/* Mass open button removed by request */}

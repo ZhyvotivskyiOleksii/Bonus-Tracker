@@ -1,7 +1,7 @@
 
 {
-  "name": "sweep-drop",
-  "short_name": "sweep-drop",
+  "name": "Sweep-Drop",
+  "short_name": "Sweep-Drop",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#111827",

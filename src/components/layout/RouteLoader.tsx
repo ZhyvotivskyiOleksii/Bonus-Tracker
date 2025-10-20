@@ -22,8 +22,7 @@ export function RouteLoader() {
         <div className="stack__card" />
         <div className="stack__card" />
       </div>
-      <div className="mt-6 text-xs tracking-wider text-foreground/80 uppercase">sweep-drop</div>
+      <div className="mt-6 text-xs tracking-wider text-foreground/80 uppercase">Sweep-Drop</div>
     </div>
   );
 }
-

@@ -55,17 +55,28 @@ export default function LoginPage() {
   useEffect(() => {
     const ref = searchParams.get('ref');
     if (ref) {
-      localStorage.setItem('referral_code', ref);
+      try {
+        // Persist for client flows
+        localStorage.setItem('referral_code', ref);
+        // Also set a cookie so the server callback can read it
+        // 30 days expiry, path=/ so it's available on /auth/callback
+        document.cookie = `referral_code=${encodeURIComponent(ref)}; path=/; max-age=${30 * 24 * 60 * 60}`;
+      } catch {}
     }
   }, [searchParams]);
 
   const getURL = () => {
-    let url =
-      process.env.NEXT_PUBLIC_SITE_URL ??
-      process.env.NEXT_PUBLIC_VERCEL_URL ??
-      '';
+    // Prefer explicit env when set (production, preview)
+    let url = (process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXT_PUBLIC_VERCEL_URL ?? '').trim();
 
-    if (!url) url = 'https://sweep-drop.com'; // default production domain
+    // In local dev, fall back to the real browser origin instead of prod domain
+    if (!url && typeof window !== 'undefined' && window.location?.origin) {
+      url = window.location.origin;
+    }
+
+    // Final safety fallback for SSR/tests
+    if (!url) url = 'http://localhost:3000';
+
     if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
     if (!url.endsWith('/')) url = `${url}/`;
     return url;
@@ -161,7 +172,12 @@ export default function LoginPage() {
     if (isOauthLoading) return;
     setIsOauthLoading(provider);
      const referralCode = localStorage.getItem('referral_code');
-    const redirectTo = getCallbackURL();
+    let redirectTo = getCallbackURL();
+    // Ensure referral is preserved through the OAuth redirect back to our callback
+    if (referralCode) {
+      const sep = redirectTo.includes('?') ? '&' : '?';
+      redirectTo = `${redirectTo}${sep}referral_code=${encodeURIComponent(referralCode)}`;
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
@@ -210,7 +226,7 @@ export default function LoginPage() {
         <div className="fog-bg absolute inset-0 pointer-events-none" />
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
-              <Image src="/image/logo.png" alt="sweep-drop" width={160} height={36} className="mx-auto h-10 w-auto" />
+              <Image src="/image/logo.png" alt="Sweep Drop" width={160} height={36} className="mx-auto h-10 w-auto" />
               <h1 className="mt-6 text-3xl font-bold tracking-tight text-foreground">
                   {mode === 'login' ? 'Log in to your account' : 'Create an account'}
               </h1>

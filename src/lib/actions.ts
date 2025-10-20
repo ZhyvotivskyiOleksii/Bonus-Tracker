@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from './supabase/server';
+import { createAdminClient } from './supabase/admin';
 import { CasinoStatus } from './types';
 import type { Profile } from './types';
 

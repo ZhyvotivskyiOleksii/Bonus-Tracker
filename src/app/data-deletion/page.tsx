@@ -3,8 +3,8 @@ import { LandingHeader } from '@/components/layout/LandingHeader'
 import { Footer } from '@/components/layout/Footer'
 
 export const metadata: Metadata = {
-  title: 'Data Deletion | sweep-drop',
-  description: 'User data deletion instructions for sweep-drop',
+  title: 'Data Deletion | Sweep-Drop',
+  description: 'User data deletion instructions for Sweep-Drop',
 }
 
 export default function DataDeletionPage() {
@@ -18,7 +18,7 @@ export default function DataDeletionPage() {
 
       <section className="space-y-3">
         <p>
-          sweep-drop stores minimal personal data to operate the service (account email, profile
+          Sweep-Drop stores minimal personal data to operate the service (account email, profile
           identifier, your casino selections and collection status, and optional push token).
         </p>
         <p>
@@ -31,7 +31,7 @@ export default function DataDeletionPage() {
             <h2 className="text-xl font-semibold">How to request deletion</h2>
             <ol className="list-decimal pl-6 space-y-1">
               <li>Send an email to <a className="underline" href="mailto:contact@sweep-drop.com">contact@sweep-drop.com</a> with subject “Account Deletion”.</li>
-              <li>From the email address linked to your account, include “Delete my sweep-drop account”.</li>
+              <li>From the email address linked to your account, include “Delete my Sweep-Drop account”.</li>
               <li>We will verify ownership and permanently delete account data within 30 days.</li>
             </ol>
           </section>

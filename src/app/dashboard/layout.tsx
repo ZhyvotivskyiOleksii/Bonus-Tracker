@@ -14,11 +14,24 @@ export default async function Layout({ children }: { children: React.ReactNode }
     redirect('/login');
   }
   
-  const { data: profile } = await supabase
+  // Ensure profile exists for the logged-in user (fallback in case DB trigger is missing)
+  let { data: profile } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
-    .single();
+    .maybeSingle();
+
+  if (!profile) {
+    try {
+      await supabase.from('profiles').insert({ id: user.id, username: user.email, role: 'user' });
+      const { data: p2 } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      profile = p2 as any;
+    } catch {}
+  }
   
   return (
     <div className="flex flex-1 flex-col">

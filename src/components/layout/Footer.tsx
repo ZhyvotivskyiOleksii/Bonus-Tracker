@@ -15,12 +15,12 @@ export function Footer() {
             <Link href="/" className="flex items-center gap-3">
               <Image
                 src="/image/logo.png"
-                alt="sweep-drop logo"
+                alt="Sweep Drop logo"
                 width={120}
                 height={28}
                 className="h-7 w-auto"
               />
-              <span className="text-lg font-semibold tracking-tight text-white">sweep-drop</span>
+              <span className="text-lg font-semibold tracking-tight text-white">Sweep Drop</span>
             </Link>
           </div>
 
@@ -60,7 +60,7 @@ export function Footer() {
 
           {/* Bottom line */}
           <div className="mt-10 border-t border-white/10 pt-4 text-xs text-muted-foreground flex flex-col sm:flex-row items-center justify-between gap-2">
-            <p>&copy; {year} sweep-drop. All rights reserved.</p>
+            <p>&copy; {year} Sweep-Drop. All rights reserved.</p>
             <div className="flex items-center gap-3">
               <Link href="/terms" className="hover:text-primary">Terms</Link>
               <span className="opacity-40">•</span>

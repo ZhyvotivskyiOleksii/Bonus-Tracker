@@ -3,8 +3,8 @@ import { LandingHeader } from '@/components/layout/LandingHeader'
 import { Footer } from '@/components/layout/Footer'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | sweep-drop',
-  description: 'Terms of Service for sweep-drop',
+  title: 'Terms of Service | Sweep-Drop',
+  description: 'Terms of Service for Sweep-Drop',
 }
 
 export default function TermsPage() {
@@ -17,7 +17,7 @@ export default function TermsPage() {
           <p className="text-sm text-muted-foreground">Last updated: Oct 2025</p>
 
       <section className="space-y-3">
-        <p>Welcome to sweep-drop. By accessing or using our service you agree to these Terms.</p>
+        <p>Welcome to Sweep-Drop. By accessing or using our service you agree to these Terms.</p>
       </section>
 
       <section className="space-y-2">

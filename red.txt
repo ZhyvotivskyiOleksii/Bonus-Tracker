@@ -1,4 +1,5 @@
 Ofwe7L4BSU3y15lw
+duns Ngj-74CW_89Yqe8
 =============================
 ssh root@45.148.244.75
 ClqVVFoUW0mMxfLbq6
@@ -9,18 +10,76 @@ ClqVVFoUW0mMxfLbq6
 ============Залить файлы:======================
 
 
-rsync -avz --delete \
-  --exclude ".next" \
-  --exclude "node_modules" \
+rsync -az --delete --exclude ".next" --exclude "node_modules" \
   "/Users/oleksiizhyvotivskyi/Desktop/Bonus-Tracker/" \
   root@45.148.244.75:/home/bugsy/sweep-drop.com/
 
 
+
 ============На сервере пересобрать======================
-ssh root@45.148.244.75 'su - bugsy -c "
-  [ -s ~/.nvm/nvm.sh ] && . ~/.nvm/nvm.sh && nvm use 22.20.0 >/dev/null
-  cd /home/bugsy/sweep-drop.com
-  npm ci --no-audit --no-fund
-  NODE_ENV=production npm run build
-  pm2 reload sweep-drop
-"'
+
+ssh root@45.148.244.75 '
+  chown -R bugsy:bugsy /home/bugsy/sweep-drop.com
+  su - bugsy -c "
+    [ -s ~/.nvm/nvm.sh ] && . ~/.nvm/nvm.sh && nvm use 22.20.0 >/dev/null
+    cd /home/bugsy/sweep-drop.com
+    npm ci --no-audit --no-fund
+    NODE_ENV=production npm run build
+    pm2 start npm --name sweep-drop --cwd /home/bugsy/sweep-drop.com -- start -- --port 3001
+    pm2 save
+  "
+'
+
+============Проверка:======================
+
+
+ssh root@45.148.244.75 '
+  su - bugsy -c "pm2 ls"
+  curl -sSI http://127.0.0.1:3001 | sed -n "1,12p"
+  curl -sSI https://sweep-drop.com | sed -n "1,12p"
+'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ssh root@45.148.244.75 '
+  set -e
+
+  # 1) фиким права каталога и доступ к домашней
+  chmod 711 /home/bugsy
+  chown -R bugsy:bugsy /home/bugsy/sweep-drop.com
+  find /home/bugsy/sweep-drop.com -type d -exec chmod 755 {} \;
+  find /home/bugsy/sweep-drop.com -type f -exec chmod 644 {} \;
+
+  # 2) сборка и запуск из правильного каталога под пользователем bugsy
+  su - bugsy -c "
+    [ -s ~/.nvm/nvm.sh ] && . ~/.nvm/nvm.sh && nvm use 22.20.0 >/dev/null
+    cd /home/bugsy/sweep-drop.com
+    npm ci --no-audit --no-fund
+    NODE_ENV=production npm run build
+    pm2 delete sweep-drop >/dev/null 2>&1 || true
+    pm2 start npm --name sweep-drop --cwd /home/bugsy/sweep-drop.com -- start -- --port 3001
+    pm2 save
+    pm2 status
+  "
+
+  # 3) проверка, что сервис слушает и отвечает
+  ss -ltnp | grep :3001 || true
+  curl -sSI http://127.0.0.1:3001 | sed -n "1,12p" || true
+'

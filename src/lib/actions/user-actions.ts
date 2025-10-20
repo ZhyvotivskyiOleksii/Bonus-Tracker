@@ -64,6 +64,42 @@ export async function updateUserCasinoRegistrations(registeredCasinoIds: string[
   }
 }
 
+export async function registerCasinoForUser(casinoId: string): Promise<ActionResponse> {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { success: false, error: 'Not authenticated' };
+  }
+
+  try {
+    const { data: existing } = await supabase
+      .from('user_casinos')
+      .select('id, status')
+      .eq('user_id', user.id)
+      .eq('casino_id', casinoId)
+      .maybeSingle();
+
+    if (existing) {
+      const { error } = await supabase
+        .from('user_casinos')
+        .update({ status: CasinoStatus.Registered, last_collected_at: null })
+        .eq('id', existing.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from('user_casinos')
+        .insert({ user_id: user.id, casino_id: casinoId, status: CasinoStatus.Registered, last_collected_at: null });
+      if (error) throw error;
+    }
+
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (error: any) {
+    console.error('registerCasinoForUser error:', error);
+    return { success: false, error: error?.message || 'Unknown error' };
+  }
+}
+
 export type UserData = {
   id: string;
   email: string | undefined;
@@ -149,6 +185,34 @@ export async function getUsersData(): Promise<UserData[]> {
   });
 
   return userData;
+}
+
+export async function ensureShortId(): Promise<{ success: boolean; short_id?: string; error?: string }> {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+  try {
+    const supabaseAdmin = createAdminClient();
+    // if already exists, return
+    const { data: profile } = await supabaseAdmin.from('profiles').select('short_id').eq('id', user.id).single();
+    if (profile?.short_id) return { success: true, short_id: profile.short_id };
+    // generate unique via DB function
+    let attempts = 0;
+    while (attempts < 5) {
+      attempts++;
+      const { data: gen } = await supabaseAdmin.rpc('generate_short_id');
+      const candidate = (gen as string) || Math.random().toString(36).slice(2, 8);
+      const { error } = await supabaseAdmin
+        .from('profiles')
+        .update({ short_id: candidate })
+        .eq('id', user.id)
+        .is('short_id', null);
+      if (!error) return { success: true, short_id: candidate };
+    }
+    return { success: false, error: 'Could not assign short_id' };
+  } catch (e: any) {
+    return { success: false, error: e?.message || 'Unknown error' };
+  }
 }
 
 

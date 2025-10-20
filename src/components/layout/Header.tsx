@@ -151,8 +151,8 @@ export function Header({ user, profile, showStats = false }: { user: User, profi
                         href="/dashboard"
                         className="inline-flex items-center gap-2 self-start ml-2 mt-1 mr-4 px-1.5 py-1 rounded-md text-foreground/90 hover:text-foreground"
                     >
-                        <Image src="/image/logo.png" alt="sweep-drop" width={18} height={18} className="h-4 w-auto" />
-                        <span className="font-semibold">sweep-drop</span>
+                        <Image src="/image/logo.png" alt="Sweep Drop" width={18} height={18} className="h-4 w-auto" />
+                        <span className="font-semibold">Sweep Drop</span>
                     </Link>
                     <MainSidebarNav isAdmin={isAdmin} />
                 </nav>
@@ -164,8 +164,8 @@ export function Header({ user, profile, showStats = false }: { user: User, profi
           href="/dashboard"
           className="hidden md:flex h-9 shrink-0 items-center gap-2 self-start"
         >
-          <Image src="/image/logo.png" alt="sweep-drop" width={120} height={28} className="h-7 w-auto" />
-          <span className="ml-1 font-semibold tracking-tight">sweep-drop</span>
+          <Image src="/image/logo.png" alt="Sweep Drop" width={120} height={28} className="h-7 w-auto" />
+          <span className="ml-1 font-semibold tracking-tight">Sweep Drop</span>
         </Link>
        </div>
       

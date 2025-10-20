@@ -3,8 +3,8 @@ import { LandingHeader } from '@/components/layout/LandingHeader'
 import { Footer } from '@/components/layout/Footer'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | sweep-drop',
-  description: 'Privacy Policy for sweep-drop',
+  title: 'Privacy Policy | Sweep-Drop',
+  description: 'Privacy Policy for Sweep-Drop',
 }
 
 export default function PrivacyPage() {
@@ -18,7 +18,7 @@ export default function PrivacyPage() {
 
           <section className="space-y-3">
             <p>
-              This Privacy Policy explains how sweep-drop ("we", "us", "our") collects, uses,
+              This Privacy Policy explains how Sweep-Drop ("we", "us", "our") collects, uses,
               and protects personal information when you use our website and services.
             </p>
             <p>
@@ -74,7 +74,7 @@ export default function PrivacyPage() {
           <section className="space-y-2">
             <h2 className="text-xl font-semibold">Contact</h2>
             <p>
-              sweep-drop — Contact: <a className="underline" href="mailto:contact@sweep-drop.com">contact@sweep-drop.com</a>
+              Sweep-Drop — Contact: <a className="underline" href="mailto:contact@sweep-drop.com">contact@sweep-drop.com</a>
             </p>
           </section>
         </div>

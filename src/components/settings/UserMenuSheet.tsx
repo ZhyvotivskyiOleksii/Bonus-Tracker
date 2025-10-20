@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
 import _ from 'lodash';
-import { updateUserCasinoRegistrations } from '@/lib/actions/user-actions';
+import { updateUserCasinoRegistrations, ensureShortId } from '@/lib/actions/user-actions';
 import { Switch } from '@/components/ui/switch';
 import { useFcm } from '@/hooks/use-fcm';
 import { Input } from '../ui/input';
@@ -95,6 +95,16 @@ export function UserMenuSheet({ user, profile }: { user: User, profile: Profile 
         return;
       };
 
+      // Always hydrate fresh profile on client (to avoid SSR prop mismatch)
+      try {
+        const { data: freshProfile } = await supabase
+          .from('profiles')
+          .select('short_id')
+          .eq('id', user.id)
+          .single();
+        if (freshProfile?.short_id) setShortId(freshProfile.short_id);
+      } catch {}
+
       // Fetch casinos
       const { data: casinoData } = await supabase.from('casinos').select('*').order('name');
       setCasinos(casinoData || []);
@@ -118,10 +128,11 @@ export function UserMenuSheet({ user, profile }: { user: User, profile: Profile 
     router.refresh();
   };
 
+  const [shortId, setShortId] = useState<string | null>(profile?.short_id || null);
   const referralLink = useMemo(() => {
-    if (typeof window === 'undefined' || !profile?.short_id) return '';
-    return `${window.location.origin}/login?ref=${profile.short_id}`;
-  }, [profile?.short_id]);
+    if (typeof window === 'undefined' || !shortId) return '';
+    return `${window.location.origin}/login?ref=${shortId}`;
+  }, [shortId]);
 
   const copyReferralLink = () => {
     if (referralLink) {
@@ -161,6 +172,8 @@ export function UserMenuSheet({ user, profile }: { user: User, profile: Profile 
     if (result.success) {
       setInitialSelectedCasinos(new Set(selectedCasinos));
       toast({ title: "Success", description: "Your settings have been saved." });
+      // Notify cards and headers to refresh even if Supabase Realtime is disabled
+      try { window.dispatchEvent(new CustomEvent('user_casinos_changed')); } catch {}
       setOpen(false); // Close sheet on successful save
     } else {
       toast({ variant: 'destructive', title: 'Error', description: result.error || 'Failed to update your casino list.' });
@@ -192,13 +205,25 @@ export function UserMenuSheet({ user, profile }: { user: User, profile: Profile 
                     <AvatarFallback>{getInitials(user?.email)}</AvatarFallback>
                 </Avatar>
                 <p className="font-semibold text-lg">{user?.email ?? 'My Account'}</p>
-                {profile?.short_id && (
+                {shortId && (
                      <div 
                         className="flex items-center gap-1.5 text-sm text-muted-foreground"
                         title="Your unique referral ID"
                     >
-                        <span>ID: {profile.short_id}</span>
+                        <span>ID: {shortId}</span>
                     </div>
+                )}
+                {!shortId && (
+                  <div className="mt-1">
+                    <Button size="sm" variant="outline" onClick={async () => {
+                      const res = await ensureShortId();
+                      if (res.success && res.short_id) {
+                        setShortId(res.short_id);
+                      } else {
+                        toast({ variant: 'destructive', title: 'Error', description: res.error || 'Could not generate ID' });
+                      }
+                    }}>Generate ID</Button>
+                  </div>
                 )}
             </div>
         </SheetHeader>

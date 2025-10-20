@@ -18,6 +18,23 @@ export async function GET(request: NextRequest) {
     
     if (!error && data.user) {
       const user = data.user as any;
+
+      // Ensure a profile row exists for the user (some projects miss the DB trigger)
+      try {
+        const supabaseAdmin = createAdminClient();
+        const { data: existingProfile } = await supabaseAdmin
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (!existingProfile) {
+          await supabaseAdmin
+            .from('profiles')
+            .insert({ id: user.id, username: user.email, role: 'user' });
+        }
+      } catch (e) {
+        console.error('Profile ensure failed', e);
+      }
       const referralCode = referralCodeFromQuery || referralCodeFromCookie || user?.user_metadata?.referred_by || null;
       if (referralCode) {
         const supabaseAdmin = createAdminClient();
@@ -43,14 +60,11 @@ export async function GET(request: NextRequest) {
           }
 
           if (!existing) {
-            const { error: upsertErr } = await supabaseAdmin
+            const { error: insertErr } = await supabaseAdmin
               .from('referrals')
-              .upsert(
-                { referrer_id: referrerProfile.id, referred_id: user.id },
-                { onConflict: 'referred_id', ignoreDuplicates: true }
-              );
-            if (upsertErr) {
-              console.error('Referral: upsert failed', upsertErr);
+              .insert({ referrer_id: referrerProfile.id, referred_id: user.id });
+            if (insertErr) {
+              console.error('Referral: insert failed', insertErr);
             }
             // Clear the cookie after successful link
             try {

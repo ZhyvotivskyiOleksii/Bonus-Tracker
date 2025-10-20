@@ -27,7 +27,7 @@ export default function Home() {
                     </span>
                   </h1>
                   <p className="max-w-[700px] text-muted-foreground md:text-lg text-center">
-                    sweep-drop keeps your bonuses organized, reminds you when they reset, and shows your progress at a glance.
+                    Sweep-Drop keeps your bonuses organized, reminds you when they reset, and shows your progress at a glance.
                     Simple, fast, and designed for everyday use.
                   </p>
                   {/* feature bullets moved to floating cards below */}
@@ -44,7 +44,7 @@ export default function Home() {
               <div className="lg:order-last flex justify-center lg:justify-end lg:-ml-6 xl:-ml-8">
                 <Image
                   src="/image/hero-img.png"
-                  alt="sweep-drop hero"
+                  alt="Sweep-Drop hero"
                   width={1100}
                   height={740}
                   className="w-[96%] max-w-[600px] h-auto rounded-3xl object-contain drop-shadow-2xl mx-auto"
@@ -89,8 +89,8 @@ export default function Home() {
         {/* Section 2: Features & How it works */}
         <section id="features" className="w-full py-16 md:py-24">
           <div className="container max-w-[1280px] px-4 md:px-6">
-            <div className="text-center space-y-3">
-              <div className="inline-block rounded-lg bg-muted px-3 py-1 text-xs tracking-wide">Why sweep-drop</div>
+              <div className="text-center space-y-3">
+              <div className="inline-block rounded-lg bg-muted px-3 py-1 text-xs tracking-wide">Why Sweep-Drop</div>
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Everything you need, zero clutter</h2>
               <p className="max-w-2xl mx-auto text-muted-foreground md:text-base">
                 A clean dashboard with your casinos, live progress, and gentle reminders. Built to be fast and distraction‑free.

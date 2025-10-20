@@ -7,7 +7,7 @@ import { AppInitializer } from '@/components/layout/AppInitializer';
 import { RouteLoader } from '@/components/layout/RouteLoader';
 
 export const metadata: Metadata = {
-  title: 'sweep-drop',
+  title: 'Sweep-Drop',
   description: 'Track your daily casino bonuses.',
   manifest: '/manifest.json',
 };
