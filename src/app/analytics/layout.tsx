@@ -4,6 +4,7 @@ import type { Profile } from '@/lib/types';
 import { Header } from '@/components/layout/Header';
 import { MainSidebarUI } from '@/components/layout/MainSidebarUI';
 import { MainSidebarNav } from '@/components/layout/MainSidebarNav';
+import { Footer } from '@/components/layout/Footer';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -38,6 +39,7 @@ export default async function AnalyticsLayout({ children }: { children: React.Re
         <div className="w-full max-w-[1400px] sm:pl-60">
           <main className="flex-1 overflow-y-auto px-5 py-5 under-header admin-fit mt-3 sm:mt-4">{children}</main>
         </div>
+        <Footer />
       </div>
     </div>
   );

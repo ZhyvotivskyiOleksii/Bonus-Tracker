@@ -48,7 +48,7 @@ export function CasinosMobile({ casinos }: { casinos: Casino[] }) {
     <div className="md:hidden space-y-4 overflow-x-hidden">
       <div className="flex items-center justify-between gap-2">
         <Input
-          placeholder="Filter casinos..."
+          placeholder="Filter sweeps casinos..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="flex-1 h-9 text-sm"
@@ -158,7 +158,7 @@ export function CasinosMobile({ casinos }: { casinos: Casino[] }) {
         ))}
         {filtered.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-6">
-            No casinos match your filter.
+            No sweeps casinos match your filter.
           </p>
         )}
       </div>

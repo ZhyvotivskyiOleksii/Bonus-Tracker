@@ -35,16 +35,16 @@ export default async function AnalyticsPage() {
           accent="primary"
         />
         <AnalyticsStatCard
-          title="Total Casinos"
+          title="Total Sweeps Casinos"
           value={totalCasinos}
-          description="Total casinos available for tracking."
+          description="Total sweeps casinos available for tracking."
           icon={<Shield className="h-4 w-4" />}
           accent="purple"
         />
         <AnalyticsStatCard
-          title="Casino Registrations"
+          title="Sweeps Casino Registrations"
           value={totalRegistrations}
-          description="User-to-casino tracking relationships."
+          description="User-to-sweeps‑casino tracking relationships."
           icon={<BookUser className="h-4 w-4" />}
           accent="green"
         />

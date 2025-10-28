@@ -4,6 +4,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { setLogoScaleParam } from '@/lib/utils';
 // Use dynamic import for sharp to avoid build-time native dependency issues
 // in environments where sharp prebuilds are unavailable (e.g., local dev on
 // differing architectures). We'll fall back to uploading the original image
@@ -143,6 +144,7 @@ export async function saveCasino(formData: FormData): Promise<ActionResponse> {
   
   const { id, ...casinoData } = validation.data;
   const logoFile = formData.get('logo') as File | null;
+  const logoScaleRaw = formData.get('logo_scale') as string | null;
   let logo_url = formData.get('logo_url') as string || undefined;
   
   try {
@@ -176,7 +178,14 @@ export async function saveCasino(formData: FormData): Promise<ActionResponse> {
       }
       logo_url = await uploadLogo(supabase, logoFile, casinoId);
     }
-    
+    // 2.1 Apply logo scale param if provided
+    try {
+      const scale = logoScaleRaw ? parseFloat(String(logoScaleRaw)) : NaN;
+      if (logo_url && isFinite(scale)) {
+        logo_url = setLogoScaleParam(logo_url, scale);
+      }
+    } catch {}
+
     // 3. Upsert casino data with all info
     const { error: upsertError } = await supabase
       .from('casinos')

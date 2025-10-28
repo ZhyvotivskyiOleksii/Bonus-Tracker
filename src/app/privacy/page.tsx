@@ -11,7 +11,7 @@ export default function PrivacyPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <LandingHeader />
-      <main className="flex-1">
+      <main className="flex-1 pt-14">
         <div className="container max-w-3xl py-10 px-4 space-y-8">
           <h1 className="text-3xl font-bold">Privacy Policy</h1>
           <p className="text-sm text-muted-foreground">Last updated: Oct 2025</p>
@@ -30,7 +30,7 @@ export default function PrivacyPage() {
         <h2 className="text-xl font-semibold">Information We Collect</h2>
         <ul className="list-disc pl-6 space-y-1">
           <li>Account data: email address and basic profile from the authentication provider.</li>
-          <li>Service data: your selected casinos and collection status (to operate the tracker).</li>
+          <li>Service data: your selected sweeps casinos and collection status (to operate the tracker).</li>
           <li>Notifications (optional): push token if you enable alerts in your browser.</li>
           <li>Technical data: cookies and basic device information used for security and session management.</li>
         </ul>

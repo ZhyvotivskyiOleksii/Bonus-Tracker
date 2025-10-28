@@ -11,7 +11,7 @@ export default function DataDeletionPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <LandingHeader />
-      <main className="flex-1">
+      <main className="flex-1 pt-14">
         <div className="container max-w-3xl py-10 px-4 space-y-8">
           <h1 className="text-3xl font-bold">User Data Deletion</h1>
           <p className="text-sm text-muted-foreground">Required for Facebook Login</p>
@@ -19,7 +19,7 @@ export default function DataDeletionPage() {
       <section className="space-y-3">
         <p>
           Sweep-Drop stores minimal personal data to operate the service (account email, profile
-          identifier, your casino selections and collection status, and optional push token).
+          identifier, your sweeps casino selections and collection status, and optional push token).
         </p>
         <p>
           You can request deletion of your account and associated personal data at any time using
@@ -40,11 +40,11 @@ export default function DataDeletionPage() {
         <h2 className="text-xl font-semibold">What will be deleted</h2>
         <ul className="list-disc pl-6 space-y-1">
           <li>Account profile and referral identifier.</li>
-          <li>Your casino selections and collection history.</li>
+          <li>Your sweeps casino selections and collection history.</li>
           <li>Notification tokens (if any).</li>
         </ul>
         <p className="text-sm text-muted-foreground">
-          Note: We do not control external casino websites you visit; deletion here does not affect their systems.
+          Note: We do not control external sweeps casino websites you visit; deletion here does not affect their systems.
         </p>
       </section>
         </div>

@@ -78,6 +78,7 @@
 }
 
 @layer base {
+  html { overflow-x: hidden; }
   * {
     @apply border-border;
   }
@@ -98,6 +99,16 @@
     background-attachment: fixed;
     background-size: auto;
   }
+}
+
+/* Mobile: avoid iOS issues with fixed backgrounds blocking scroll */
+@media (max-width: 768px) {
+  body { background-attachment: scroll; }
+}
+
+/* iOS Safari specific safeguard */
+@supports (-webkit-touch-callout: none) {
+  body { background-attachment: scroll; }
 }
 
 /* Generic helpers for layouts with fixed header */
@@ -134,6 +145,19 @@
     top: 6.5rem; /* approximate header block height */
     z-index: 19;
   }
+}
+
+/* Animated conic-gradient border that rotates like a snake */
+@layer utilities {
+  .animated-border { position: relative; --ab-angle: 0deg; --ab-delay: 0s; }
+  .animated-border::before {
+    content: ""; position: absolute; inset: -1px; padding: 1px; border-radius: inherit;
+    background: conic-gradient(from var(--ab-angle), rgba(59,130,246,0) 0deg, rgba(59,130,246,0.85) 60deg, rgba(59,130,246,0) 120deg, rgba(59,130,246,0) 360deg);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+    animation: ab-rotate 6s linear infinite; animation-delay: var(--ab-delay);
+  }
+  @keyframes ab-rotate { to { --ab-angle: 360deg; } }
 }
 
 
@@ -332,10 +356,6 @@
 .stack__card:nth-child(3)::before {
   animation-delay: calc(var(--stack-dur) * (-1 + var(--stack-delay) * 2));
   background-color: hsl(var(--primary) / 0.15);
-  background-image: url('/image/logo.png');
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 45% 45%;
 }
 
 @keyframes stack-card {
@@ -353,6 +373,49 @@
   0% { background-position: 0% 0%, 100% 0%, 0% 100%, 100% 100%; }
   50% { background-position: 15% 5%, 85% 10%, 10% 90%, 90% 95%; }
   100% { background-position: 0% 0%, 100% 0%, 0% 100%, 100% 100%; }
+}
+
+/* Animated CTA button in sweeps style */
+.cta-sweeps {
+  --cta-radius: 14px;
+  --cta-shadow: 0 12px 28px rgba(0,0,0,0.35), 0 0 18px rgba(245,158,11,0.22);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: var(--cta-radius);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: #0b0b0f;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  overflow: hidden; /* keep effects inside the button */
+  background-image: linear-gradient(90deg,#22C55E 0%,#86EFAC 25%,#FDE047 55%,#F59E0B 75%,#22C55E 100%);
+  background-size: 200% 200%;
+  animation: cta-move 6s ease-in-out infinite;
+  box-shadow: var(--cta-shadow);
+  transform: translateZ(0); /* better perf */
+}
+.cta-sweeps:hover { transform: translateY(-2px); box-shadow: 0 18px 40px rgba(0,0,0,0.45), 0 0 26px rgba(245,158,11,0.32); }
+.cta-sweeps:active { transform: translateY(0); }
+.cta-sweeps::after {
+  content: "";
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.16), rgba(255,255,255,0));
+  width: 32%; height: 100%; transform: skewX(16deg) translateX(-140%);
+  animation: cta-shine 2.8s cubic-bezier(.4,0,.2,1) infinite;
+}
+.cta-sweeps .icon { transition: transform .25s ease; }
+.cta-sweeps:hover .icon { transform: translateX(2px); }
+
+@keyframes cta-move { 0%{ background-position: 0% 50% } 50%{ background-position: 100% 50% } 100%{ background-position: 0% 50% } }
+@keyframes cta-shine { 0%{ transform: skewX(16deg) translateX(-140%); opacity: 0 }
+  15%{ opacity: .9 } 40%{ opacity: .6 } 100%{ transform: skewX(16deg) translateX(320%); opacity: 0 } }
+
+@media (prefers-reduced-motion: reduce) {
+  .cta-sweeps { animation: none; }
+  .cta-sweeps::after { display: none; }
 }
 
 /* Glass panel utility for auth card */
@@ -374,4 +437,45 @@
   height: 50%;
   background: radial-gradient(800px 400px at 20% 0%, hsl(var(--primary) / 0.15), transparent 60%);
   pointer-events: none;
+}
+
+/* Vertical shimmer used on the VS divider in Before/After */
+@keyframes vs-sweep {
+  0% { transform: translateY(-60%); }
+  100% { transform: translateY(160%); }
+}
+.vs-connector { animation: vs-sweep 3.2s cubic-bezier(.4,0,.2,1) infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .vs-connector { animation: none; }
+}
+
+/* Fade bottom mask for images to blend into dark bg */
+.img-fade-bottom {
+  /* Stronger, curved dissolve towards bottom-right */
+  -webkit-mask-image:
+    radial-gradient(1000px 680px at 95% 100%, #000 40%, rgba(0,0,0,0.6) 70%, transparent 95%),
+    linear-gradient(to bottom, #000 52%, rgba(0,0,0,0.55) 72%, transparent 100%);
+  mask-image:
+    radial-gradient(1000px 680px at 95% 100%, #000 40%, rgba(0,0,0,0.6) 70%, transparent 95%),
+    linear-gradient(to bottom, #000 52%, rgba(0,0,0,0.55) 72%, transparent 100%);
+}
+
+/* Glossy bullet with sweeping light (for solution section list) */
+.bullet-glow {
+  position: relative;
+  background: radial-gradient(60% 60% at 50% 50%, hsl(var(--status-not-registered) / 0.18), rgba(255,255,255,0.04) 70%);
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 0 6px hsl(var(--status-not-registered) / 0.22);
+}
+
+@keyframes bullet-sheen {
+  0% { transform: translateX(-160%) skewX(-18deg); opacity: 0; }
+  15% { opacity: .85; }
+  100% { transform: translateX(160%) skewX(-18deg); opacity: 0; }
+}
+.bullet-sheen-line {
+  position: absolute; top: -30%; bottom: -30%; left: -60%; width: 52%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+  border-radius: 9999px; pointer-events: none;
+  animation: bullet-sheen 3.2s cubic-bezier(.4,0,.2,1) infinite;
 }

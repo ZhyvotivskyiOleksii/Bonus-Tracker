@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import SweepDropLogo from '@/components/brand/SweepDropLogo';
 import { usePathname } from "next/navigation";
 
 export function RouteLoader() {
@@ -17,12 +18,14 @@ export function RouteLoader() {
   if (!show) return null;
   return (
     <div className="fixed inset-0 z-[60] grid place-items-center bg-background/70 backdrop-blur-sm">
-      <div className="stack" role="status" aria-label="Loading">
-        <div className="stack__card" />
-        <div className="stack__card" />
-        <div className="stack__card" />
+      <div className="flex flex-col items-center">
+        <SweepDropLogo size={24} coinSize={18} />
+        <div className="mt-4 stack" role="status" aria-label="Loading">
+          <div className="stack__card" />
+          <div className="stack__card" />
+          <div className="stack__card" />
+        </div>
       </div>
-      <div className="mt-6 text-xs tracking-wider text-foreground/80 uppercase">Sweep-Drop</div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
+import SweepDropLogo from '@/components/brand/SweepDropLogo';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -226,7 +226,9 @@ export default function LoginPage() {
         <div className="fog-bg absolute inset-0 pointer-events-none" />
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
-              <Image src="/image/logo.png" alt="Sweep Drop" width={160} height={36} className="mx-auto h-10 w-auto" />
+              <div className="mx-auto inline-block">
+                <SweepDropLogo size={26} coinSize={20} />
+              </div>
               <h1 className="mt-6 text-3xl font-bold tracking-tight text-foreground">
                   {mode === 'login' ? 'Log in to your account' : 'Create an account'}
               </h1>

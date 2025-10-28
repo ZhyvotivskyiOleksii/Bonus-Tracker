@@ -5,6 +5,7 @@ import type { Casino } from "@/lib/types"
 import { ArrowUpDown, Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
+import { getLogoScaleFromUrl } from "@/lib/utils"
 import { CasinoActions } from "./casino-actions"
 
 const formatCoins = (amount: number | null) => {
@@ -29,9 +30,9 @@ export const columns: ColumnDef<Casino>[] = [
         const casino = row.original;
         return (
             <div className="w-24 h-12 flex items-center justify-center bg-muted rounded-md p-1 min-w-[6rem]">
-              {casino.logo_url ? (
-                  <Image src={casino.logo_url} alt={casino.name} width={80} height={40} className="object-contain" />
-              ) : (
+              {casino.logo_url ? (() => { const s = getLogoScaleFromUrl(casino.logo_url); return (
+                  <Image src={casino.logo_url} alt={casino.name} width={Math.round(80 * s)} height={Math.round(40 * s)} className="object-contain" />
+              ) })() : (
                 <div className="text-xs text-muted-foreground">No Logo</div>
               )}
             </div>

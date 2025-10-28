@@ -19,16 +19,25 @@ rsync -az --delete --exclude ".next" --exclude "node_modules" \
 ============На сервере пересобрать======================
 
 ssh root@45.148.244.75 '
+  set -e
   chown -R bugsy:bugsy /home/bugsy/sweep-drop.com
   su - bugsy -c "
     [ -s ~/.nvm/nvm.sh ] && . ~/.nvm/nvm.sh && nvm use 22.20.0 >/dev/null
     cd /home/bugsy/sweep-drop.com
     npm ci --no-audit --no-fund
     NODE_ENV=production npm run build
+
+    # Останавливаем старые процессы перед запуском
+    pm2 delete sweep-drop >/dev/null 2>&1 || true
+
+    # Стартуем только один процесс
     pm2 start npm --name sweep-drop --cwd /home/bugsy/sweep-drop.com -- start -- --port 3001
+
     pm2 save
+    pm2 ls
   "
 '
+
 
 ============Проверка:======================
 
@@ -41,6 +50,15 @@ ssh root@45.148.244.75 '
 
 
 
+============Чтобы сбросить кеш на сервере:======================
+
+
+ssh root@45.148.244.75 'su - bugsy -c "
+  cd /home/bugsy/sweep-drop.com
+  rm -rf .next/cache
+  rm -rf .next/server/app/*/.rsc-cache
+  rm -rf .vercel/output/functions_node/*
+"'
 
 
 
@@ -58,28 +76,3 @@ ssh root@45.148.244.75 '
 
 
 
-ssh root@45.148.244.75 '
-  set -e
-
-  # 1) фиким права каталога и доступ к домашней
-  chmod 711 /home/bugsy
-  chown -R bugsy:bugsy /home/bugsy/sweep-drop.com
-  find /home/bugsy/sweep-drop.com -type d -exec chmod 755 {} \;
-  find /home/bugsy/sweep-drop.com -type f -exec chmod 644 {} \;
-
-  # 2) сборка и запуск из правильного каталога под пользователем bugsy
-  su - bugsy -c "
-    [ -s ~/.nvm/nvm.sh ] && . ~/.nvm/nvm.sh && nvm use 22.20.0 >/dev/null
-    cd /home/bugsy/sweep-drop.com
-    npm ci --no-audit --no-fund
-    NODE_ENV=production npm run build
-    pm2 delete sweep-drop >/dev/null 2>&1 || true
-    pm2 start npm --name sweep-drop --cwd /home/bugsy/sweep-drop.com -- start -- --port 3001
-    pm2 save
-    pm2 status
-  "
-
-  # 3) проверка, что сервис слушает и отвечает
-  ss -ltnp | grep :3001 || true
-  curl -sSI http://127.0.0.1:3001 | sed -n "1,12p" || true
-'

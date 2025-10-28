@@ -44,9 +44,9 @@ export default async function DashboardPage() {
             <div className="flex items-center justify-center h-48">
                 <Alert className="max-w-md">
                     <Info className="h-4 w-4" />
-                    <AlertTitle>No Casino Offers Available</AlertTitle>
+                    <AlertTitle>No Sweeps Casino Offers Available</AlertTitle>
                     <AlertDescription>
-                        There are currently no casino offers to display. An administrator can add new offers in the admin panel.
+                        There are currently no sweeps casino offers to display. An administrator can add new offers in the admin panel.
                     </AlertDescription>
                 </Alert>
             </div>

@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { cn, effectiveStatusForToday, isCollectedTodayNY, openInBackground, preOpenBackground } from '@/lib/utils';
+import { cn, effectiveStatusForToday, getLogoScaleFromUrl, isCollectedTodayNY, openInBackground, preOpenBackground } from '@/lib/utils';
 import type { Casino } from '@/lib/types';
 import { UserCasino, CasinoStatus } from '@/lib/types';
 import { Check, Loader2 } from 'lucide-react';
@@ -346,22 +346,22 @@ export function CasinoCard({ casino, userCasino }: CasinoCardProps) {
         'flex flex-col justify-between transition-all duration-300 border shadow-lg hover:shadow-2xl hover:scale-[1.02] relative overflow-hidden group p-4 rounded-2xl',
          getCardClasses()
     )}>
+      {/* Decorative icons removed by request */}
        {isCollectedDaily && (
           <div className="absolute top-3 right-3 h-8 w-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
             <Check className="h-6 w-6 text-status-collected-button" />
           </div>
         )}
       <CardHeader className="flex-grow-0 flex items-center justify-center p-0 h-24">
-        <div className={cn("relative flex items-center justify-center h-full w-full")}>
-            {casino.logo_url ? (
+        <div className={cn("relative flex items-center justify-center h-full w-full")}> 
+            {casino.logo_url ? (() => { const s = getLogoScaleFromUrl(casino.logo_url); return (
               <Image
                   src={casino.logo_url}
                   alt={`${casino.name} logo`}
-                  width={150}
-                  height={64}
-                  className="object-contain h-16 w-auto"
-              />
-            ) : (
+                  width={Math.round(150 * s)}
+                  height={Math.round(64 * s)}
+                  className="object-contain"
+              />)} )() : (
               <div className="text-muted-foreground">{casino.name}</div>
             )}
         </div>

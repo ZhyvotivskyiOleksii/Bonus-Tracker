@@ -10,7 +10,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2, RefreshCw } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
@@ -20,6 +21,8 @@ interface EmailTableProps {
 
 export function EmailTable({ emails }: EmailTableProps) {
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const { toast } = useToast();
 
   const downloadPdf = () => {
     setIsGenerating(true);
@@ -52,9 +55,33 @@ export function EmailTable({ emails }: EmailTableProps) {
     }
   };
 
+  const syncToBrevo = async () => {
+    setIsSyncing(true);
+    try {
+      const res = await fetch('/api/brevo/sync', { method: 'POST' });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || `Sync failed (${res.status})`);
+      }
+      toast({ title: 'Synced to Brevo', description: `Synced: ${json.synced}, Failed: ${json.failed}` });
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Brevo Sync Failed', description: e?.message || 'Unknown error' });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return (
     <div className="w-full space-y-4">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={syncToBrevo} disabled={isSyncing}>
+          {isSyncing ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="mr-2 h-4 w-4" />
+          )}
+          Sync to Brevo
+        </Button>
         <Button onClick={downloadPdf} disabled={isGenerating}>
           {isGenerating ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />

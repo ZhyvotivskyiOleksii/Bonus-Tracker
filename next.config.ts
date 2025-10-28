@@ -30,6 +30,12 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'sweepplay.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'ypcrozqbentrvipnawzd.supabase.co',
         port: '',
         pathname: '/**',

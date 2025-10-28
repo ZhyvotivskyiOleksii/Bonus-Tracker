@@ -29,7 +29,8 @@ import { saveCasino } from '@/lib/actions/casino-actions';
 import { useEffect, useMemo, useState } from 'react';
 import { Loader2, Plus, UploadCloud, X } from 'lucide-react';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
+import { cn, getLogoScaleFromUrl } from '@/lib/utils';
+import { Slider } from '@/components/ui/slider';
 
 const formSchema = z.object({
   id: z.string().optional(),
@@ -56,6 +57,7 @@ export function CasinoFormDialog({ casino, children, onOpenChange }: CasinoFormD
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(casino?.logo_url ?? null);
+  const [logoScale, setLogoScale] = useState<number>(getLogoScaleFromUrl(casino?.logo_url));
 
   const defaultFormValues = useMemo(() => ({
     id: casino?.id || undefined,
@@ -77,6 +79,7 @@ export function CasinoFormDialog({ casino, children, onOpenChange }: CasinoFormD
     form.reset(defaultFormValues);
     setLogoFile(null);
     setPreviewUrl(casino?.logo_url ?? null);
+    setLogoScale(getLogoScaleFromUrl(casino?.logo_url));
   }
 
   const handleOpenChange = (isOpen: boolean) => {
@@ -134,6 +137,8 @@ export function CasinoFormDialog({ casino, children, onOpenChange }: CasinoFormD
     if (logoFile) {
         formData.append('logo', logoFile);
     }
+    // Persist logo scale as a separate field consumed by the server action
+    formData.append('logo_scale', String(logoScale));
     
     const result = await saveCasino(formData);
 
@@ -200,20 +205,30 @@ export function CasinoFormDialog({ casino, children, onOpenChange }: CasinoFormD
                     <div className="w-full">
                         <Input id="logo-upload" type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
                         {previewUrl ? (
-                            <div className="relative group w-48 h-24">
-                                <Image src={previewUrl} alt="Logo Preview" fill className="object-contain rounded-md bg-muted p-1" />
-                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-md">
-                                    <Button type="button" variant="destructive" size="icon" onClick={removeLogo}>
-                                        <X className="h-4 w-4" />
-                                    </Button>
-                                    <label htmlFor="logo-upload" className={cn(
-                                        "ml-2",
-                                        buttonVariants({ variant: "outline", size: "icon" }),
-                                        "cursor-pointer"
-                                    )}>
-                                       <UploadCloud className="h-4 w-4" />
-                                    </label>
+                            <div className="relative group w-60 h-28">
+                              <div className="w-full h-full rounded-md bg-muted overflow-hidden p-1">
+                                <div className="relative w-full h-full">
+                                  <Image
+                                    src={previewUrl}
+                                    alt="Logo Preview"
+                                    fill
+                                    className="object-contain"
+                                    style={{ transform: `scale(${logoScale})`, transformOrigin: 'center' }}
+                                  />
                                 </div>
+                              </div>
+                              <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-md">
+                                  <Button type="button" variant="destructive" size="icon" onClick={removeLogo}>
+                                      <X className="h-4 w-4" />
+                                  </Button>
+                                  <label htmlFor="logo-upload" className={cn(
+                                      "ml-2",
+                                      buttonVariants({ variant: "outline", size: "icon" }),
+                                      "cursor-pointer"
+                                  )}>
+                                     <UploadCloud className="h-4 w-4" />
+                                  </label>
+                              </div>
                             </div>
                         ) : (
                             <label 
@@ -233,6 +248,16 @@ export function CasinoFormDialog({ casino, children, onOpenChange }: CasinoFormD
                 </FormControl>
                 <FormMessage />
             </FormItem>
+
+            {previewUrl && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <FormLabel>Logo Size</FormLabel>
+                  <span className="text-xs text-muted-foreground">{Math.round(logoScale * 100)}%</span>
+                </div>
+                <Slider value={[logoScale]} min={0.6} max={1.6} step={0.05} onValueChange={(v) => setLogoScale(v[0])} />
+              </div>
+            )}
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                <FormField

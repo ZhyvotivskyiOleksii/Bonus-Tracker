@@ -1,6 +1,7 @@
 import { MainSidebarNav } from '@/components/layout/MainSidebarNav';
 import { MainSidebarUI } from '@/components/layout/MainSidebarUI';
 import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import type { Profile } from '@/lib/types';
@@ -35,6 +36,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
         <div className="w-full max-w-[1400px] sm:pl-60">
           <main className="flex-1 overflow-y-auto overflow-x-hidden px-5 py-5 under-header admin-fit mt-3 sm:mt-4">{children}</main>
         </div>
+        <Footer />
       </div>
     </div>
   );

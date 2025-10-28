@@ -24,8 +24,8 @@ export function CasinoPopularityChart({ data }: CasinoPopularityChartProps) {
     return (
        <Card>
         <CardHeader>
-          <CardTitle>Casino Popularity</CardTitle>
-          <CardDescription>Top 10 casinos by user registrations.</CardDescription>
+          <CardTitle>Sweeps Casino Popularity</CardTitle>
+          <CardDescription>Top 10 sweeps casinos by user registrations.</CardDescription>
         </CardHeader>
         <CardContent>
             <div className="flex items-center justify-center h-48">
@@ -48,8 +48,8 @@ export function CasinoPopularityChart({ data }: CasinoPopularityChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Casino Popularity</CardTitle>
-        <CardDescription>Top 10 casinos by user registrations.</CardDescription>
+        <CardTitle>Sweeps Casino Popularity</CardTitle>
+        <CardDescription>Top 10 sweeps casinos by user registrations.</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[--chart-height] w-full" style={{'--chart-height': `${chartHeight}px`} as React.CSSProperties}>
@@ -79,7 +79,7 @@ export function CasinoPopularityChart({ data }: CasinoPopularityChartProps) {
         <div className="flex w-full items-start gap-2 text-sm">
           <div className="grid gap-2">
             <div className="flex items-center gap-2 font-medium leading-none">
-              <TrendingUp className="h-4 w-4" /> Most popular casinos are shown.
+              <TrendingUp className="h-4 w-4" /> Most popular sweeps casinos are shown.
             </div>
             <div className="flex items-center gap-2 leading-none text-muted-foreground">
               Based on user registrations in the tracker.

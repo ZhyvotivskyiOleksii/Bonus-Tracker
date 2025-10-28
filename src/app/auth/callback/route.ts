@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { NextRequest } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { brevoUpsertContact } from '@/lib/integrations/brevo'
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
@@ -78,6 +79,16 @@ export async function GET(request: NextRequest) {
     }
 
     if (!error) {
+      // Best-effort: upsert contact into Brevo for email comms
+      try {
+        if (data?.user?.email) {
+          await brevoUpsertContact(data.user.email, {
+            attributes: { USER_ID: data.user.id },
+          });
+        }
+      } catch (e) {
+        console.warn('Brevo upsert (auth callback) failed:', e);
+      }
       // Prefer explicit site URL when provided (production). Fallback to request origin (dev).
       const envBase = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || undefined;
       const base = envBase || requestUrl.origin;

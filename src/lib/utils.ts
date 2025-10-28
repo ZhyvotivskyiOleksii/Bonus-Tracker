@@ -74,6 +74,30 @@ export function preOpenBackground(): Window | null {
   }
 }
 
+// ---- Logo scale helpers ----
+export function getLogoScaleFromUrl(url?: string | null): number {
+  if (!url) return 1;
+  try {
+    const u = new URL(url);
+    const raw = u.searchParams.get('ls') || u.searchParams.get('scale');
+    const n = raw ? parseFloat(raw) : NaN;
+    if (!isFinite(n)) return 1;
+    return Math.min(2, Math.max(0.5, n));
+  } catch {
+    return 1;
+  }
+}
+
+export function setLogoScaleParam(url: string, scale: number): string {
+  try {
+    const u = new URL(url);
+    u.searchParams.set('ls', String(scale));
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
 // Unified calculations for totals and collected values across SC/GC.
 // Ensures HeaderStats and DailyTrackerHeader remain consistent.
 export function computeBonusTotals(casinos: Casino[], userCasinos: UserCasino[]) {

@@ -19,14 +19,14 @@ export default async function SettingsPage() {
   if (error) {
     console.error("Error fetching casinos:", error);
     // Handle error appropriately
-    return <div>Error loading casino data.</div>;
+    return <div>Error loading sweeps casino data.</div>;
   }
 
   return (
     <div className="w-full space-y-6">
        <SectionHeader
          title="Settings"
-         description="Manage casino offers and application settings."
+         description="Manage sweeps casino offers and application settings."
          icon={<SettingsIcon className="h-4 w-4 text-primary" />}
          className="sticky-under-header"
        />
