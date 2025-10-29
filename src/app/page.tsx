@@ -85,7 +85,8 @@ export default function Home() {
                 backgroundRepeat: 'no-repeat',
                 // Center horizontally; lift image above the ribbon (~56px)
                 backgroundPosition: 'center bottom 60px',
-                backgroundSize: 'auto 34vh',
+                // Slightly smaller height so it doesn't intrude under the CTA on mobile
+                backgroundSize: 'auto 30vh',
                 bottom: 0,
               }}
             />
@@ -116,7 +117,7 @@ export default function Home() {
                       <span className="ml-2 align-middle">💰</span>
                     </span>
                   </h1>
-                  {/* Signup badge between heading and paragraph: center on mobile, left on desktop */}
+                  {/* Signup plaque between heading and paragraph: center on mobile, left on desktop */}
                   <div className="flex justify-center lg:justify-start mt-1 mb-1 sm:mb-2">
                     <div
                       className="rounded-[22px] p-[2px] block w-full sm:inline-block sm:w-auto"
@@ -126,26 +127,30 @@ export default function Home() {
                       }}
                     >
                       <div
-                        className="relative overflow-hidden rounded-[inherit] border border-white/15 bg-card/80 h-auto min-h-0 md:h-[125px] w-full md:w-auto lg:w-auto xl:w-auto md:max-w-[820px] px-2 py-1 md:px-3 md:py-4 flex flex-col items-center justify-center text-center"
+                        className="relative overflow-hidden rounded-[inherit] border border-white/15 bg-[#1D1744] h-auto min-h-0 md:h-[125px] w-full md:w-auto lg:w-auto xl:w-auto md:max-w-[820px] px-2 py-1 md:px-3 md:py-4 flex flex-col items-center justify-center text-center"
                         style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.06), 0 0 0 1px rgba(255,255,255,0.04)' }}
                       >
                         <div aria-hidden className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[radial-gradient(220px_160px_at_20%_0%,rgba(147,51,234,.16),transparent_65%),radial-gradient(240px_180px_at_100%_100%,rgba(79,70,229,.14),transparent_65%)]" />
                         <div className="relative z-10 w-full h-full flex flex-col items-center justify-center gap-[1px] pt-0 md:pt-0">
-                          {/* Mobile: 40+ and SweepCoins on the same line, same visual size */}
-                          <div className="md:hidden flex items-center justify-center gap-1.5 whitespace-nowrap leading-none">
-                            <span className="inline-block min-w-[68px] text-left">
+                          {/* Mobile: stack in a column — 40+, SweepCoins, subcaption */}
+                          <div className="md:hidden flex flex-col items-center justify-center gap-[2px] leading-none text-center">
+                            <span className="inline-block min-w-[68px] text-center">
                               <SignupCounter target={40} size={90} label="+" tight fluid />
                             </span>
                             <span className="font-extrabold tracking-wide text-white leading-none text-[clamp(18px,6.6vw,28px)]">SweepCoins</span>
+                            <span className="m-0 font-semibold tracking-wide text-white/90 text-[clamp(12px,4vw,15px)] leading-none">just for Sign Up</span>
                           </div>
-                          <div className="hidden md:flex items-center justify-center gap-1 whitespace-nowrap">
-                            <span className="inline-block md:min-w-[86px] text-left">
-                              <SignupCounter target={40} size={125} label="+" tight fluid />
+                          {/* Desktop: 40+ and SweepCoins with a caption below (exact match) */}
+                          <div className="hidden md:flex items-center justify-center gap-2 whitespace-nowrap leading-none">
+                            <span className="inline-block md:min-w-[110px] text-left">
+                              <SignupCounter target={40} size={187.5} label="+" tight fluid />
                             </span>
-                            <span className="font-extrabold tracking-normal text-white/95 text-[32px] lg:text-[36px] xl:text-[38px] leading-none">SweepCoins just for Sign Up</span>
+                            <span className="flex flex-col items-start text-left">
+                              <span className="font-extrabold tracking-wide text-white text-[34px] lg:text-[38px] xl:text-[40px] leading-none">SweepCoins</span>
+                              <span className="text-white/80 font-medium text-[14px] lg:text-[15px] leading-none">just for Sign Up</span>
+                            </span>
                           </div>
-                          {/* Mobile caption: inline under main row to preserve inner padding */}
-                          <p className="m-0 md:hidden font-semibold tracking-wide text-white/90 text-[clamp(12px,4vw,15px)] leading-none mt-0 text-center">just for Sign Up</p>
+                          {/* Caption now included in the mobile column above */}
                         </div>
                       </div>
                     </div>
