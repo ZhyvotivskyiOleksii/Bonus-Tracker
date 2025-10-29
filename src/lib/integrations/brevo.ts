@@ -39,20 +39,34 @@ export async function brevoUpsertContact(email: string, opts: UpsertOptions = {}
   if (typeof opts.smsBlacklisted === 'boolean') body.smsBlacklisted = opts.smsBlacklisted;
 
   try {
-    const res = await fetch('https://api.brevo.com/v3/contacts', {
+    const endpoint = 'https://api.brevo.com/v3/contacts';
+    const doRequest = async (data: any) => fetch(endpoint, {
       method: 'POST',
       headers: {
         'accept': 'application/json',
         'content-type': 'application/json',
         'api-key': apiKey,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(data),
       // Avoid caching; we want live write
       cache: 'no-store',
     } as any);
 
+    // First attempt
+    let res = await doRequest(body);
+
+    // If attributes are not recognized (e.g., USER_ID not created), retry without attributes
     if (!res.ok) {
       const text = await res.text().catch(() => '');
+      const lower = (text || '').toLowerCase();
+      const maybeAttrIssue = res.status === 400 && (lower.includes('attribute') || lower.includes('attributes') || lower.includes('does not exist'));
+      if (maybeAttrIssue && body.attributes) {
+        const { attributes, ...rest } = body;
+        res = await doRequest(rest);
+        if (res.ok) return { success: true };
+        const retryText = await res.text().catch(() => '');
+        return { success: false, error: `Brevo error ${res.status} after retry: ${retryText || text}` };
+      }
       return { success: false, error: `Brevo error ${res.status}: ${text}` };
     }
     return { success: true };
@@ -60,4 +74,3 @@ export async function brevoUpsertContact(email: string, opts: UpsertOptions = {}
     return { success: false, error: e?.message || 'Network error' };
   }
 }
-
