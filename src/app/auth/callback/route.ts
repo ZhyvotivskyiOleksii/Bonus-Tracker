@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
     
     if (!error && data.user) {
       const user = data.user as any;
+      let wasNewProfile = false;
 
       // Ensure a profile row exists for the user (some projects miss the DB trigger)
       try {
@@ -32,6 +33,7 @@ export async function GET(request: NextRequest) {
           await supabaseAdmin
             .from('profiles')
             .insert({ id: user.id, username: user.email, role: 'user' });
+          wasNewProfile = true;
         }
       } catch (e) {
         console.error('Profile ensure failed', e);
@@ -69,8 +71,25 @@ export async function GET(request: NextRequest) {
             }
             // Clear the cookie after successful link
             try {
+              // Upsert contact to Brevo even on the referral early-return path
+              try {
+                if (user?.email) {
+                  await brevoUpsertContact(user.email, { attributes: { USER_ID: user.id } });
+                }
+              } catch (e) {
+                console.warn('Brevo upsert (referral branch) failed:', e);
+              }
+
               const res = NextResponse.redirect(new URL(next, requestUrl.origin));
               res.cookies.set({ name: 'referral_code', value: '', maxAge: 0, path: '/' });
+              // Signal GTM about auth result (login vs signup). Short-lived cookie read on client.
+              res.cookies.set({
+                name: 'gtm_evt',
+                value: wasNewProfile ? 'signup' : 'login',
+                maxAge: 60,
+                path: '/',
+                domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN || undefined,
+              });
               return res;
             } catch {}
           }
@@ -93,10 +112,21 @@ export async function GET(request: NextRequest) {
       const envBase = process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || undefined;
       const base = envBase || requestUrl.origin;
       const target = new URL(next, base).toString();
-      return NextResponse.redirect(target)
+      const res = NextResponse.redirect(target);
+      // Signal GTM about auth result (login vs signup). Short-lived cookie read on client.
+      res.cookies.set({
+        name: 'gtm_evt',
+        value: (typeof wasNewProfile !== 'undefined' && wasNewProfile) ? 'signup' : 'login',
+        maxAge: 60,
+        path: '/',
+        domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN || undefined,
+      });
+      return res;
     }
   }
 
   // return the user to an error page with instructions
   return NextResponse.redirect(requestUrl.origin + '/login?error=Could not authenticate user')
 }
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';

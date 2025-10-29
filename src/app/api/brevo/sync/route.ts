@@ -1,9 +1,18 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { syncAllUsersToBrevo } from '@/lib/actions/brevo-actions';
+import { brevoGetConfig } from '@/lib/integrations/brevo';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST() {
   try {
+    // Quick config sanity: ensure key exists
+    const cfg = brevoGetConfig();
+    if (!cfg.hasKey) {
+      return NextResponse.json({ success: false, error: 'BREVO_API_KEY not configured on server', config: cfg }, { status: 500 });
+    }
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -25,4 +34,3 @@ export async function POST() {
     return NextResponse.json({ success: false, error: e?.message || 'Unknown error' }, { status: 500 });
   }
 }
-

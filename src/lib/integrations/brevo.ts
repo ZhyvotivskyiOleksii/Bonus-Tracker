@@ -8,17 +8,26 @@ type UpsertOptions = {
   smsBlacklisted?: boolean;
 };
 
-function getBrevoKey(): string | null {
+export function getBrevoKey(): string | null {
   return process.env.BREVO_API_KEY || process.env.NEXT_PUBLIC_BREVO_API_KEY || null;
 }
 
-function getDefaultListIds(): number[] | undefined {
+export function getDefaultListIds(): number[] | undefined {
   const val = process.env.BREVO_LIST_ID || process.env.BREVO_LIST_IDS;
   if (!val) return undefined;
   try {
     const ids = val.split(',').map((s) => parseInt(s.trim(), 10)).filter((n) => Number.isFinite(n));
     return ids.length ? ids : undefined;
   } catch { return undefined; }
+}
+
+export function brevoGetConfig() {
+  const apiKey = getBrevoKey();
+  const listIds = getDefaultListIds();
+  return {
+    hasKey: !!apiKey,
+    listIds: listIds ?? [],
+  };
 }
 
 export async function brevoUpsertContact(email: string, opts: UpsertOptions = {}) {

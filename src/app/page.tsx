@@ -1,4 +1,6 @@
 import React from 'react';
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
 import fs from 'fs';
 import path from 'path';
 import Link from 'next/link';
@@ -35,7 +37,13 @@ import SignupCounter from '@/components/landing/SignupCounter';
 import { TestimonialCard } from '@/components/landing/TestimonialCard';
 import { BeforeAfterSection } from '@/components/landing/BeforeAfter';
 
-export default function Home() {
+export default async function Home() {
+  // If user is already authenticated, send straight to the panel
+  try {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) redirect('/dashboard');
+  } catch {}
   // Build partner logos list from public/partner at render time
   let PARTNER_LOGOS: string[] = [];
   try {

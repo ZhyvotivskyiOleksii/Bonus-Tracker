@@ -22,6 +22,7 @@ interface EmailTableProps {
 export function EmailTable({ emails }: EmailTableProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
   const { toast } = useToast();
 
   const downloadPdf = () => {
@@ -71,9 +72,35 @@ export function EmailTable({ emails }: EmailTableProps) {
     }
   };
 
+  const checkBrevo = async () => {
+    setIsChecking(true);
+    try {
+      const res = await fetch('/api/brevo/check');
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        const extra = json?.accountStatus ? ` (status ${json.accountStatus})` : ` (${res.status})`;
+        const body = typeof json?.accountBody === 'string' ? ` — ${json.accountBody.slice(0, 120)}` : '';
+        throw new Error((json?.reason || 'Check failed') + extra + body);
+      }
+      toast({ title: 'Brevo OK', description: `Key: ${json.hasKey ? 'yes' : 'no'}, Lists: ${json.listIds?.join(',') || 'none'}, Status: ${json.accountStatus}` });
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Brevo Check Failed', description: e?.message || 'Unknown error' });
+    } finally {
+      setIsChecking(false);
+    }
+  };
+
   return (
     <div className="w-full space-y-4">
       <div className="flex justify-end gap-2">
+        <Button variant="secondary" onClick={checkBrevo} disabled={isChecking}>
+          {isChecking ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="mr-2 h-4 w-4" />
+          )}
+          Check Brevo
+        </Button>
         <Button variant="outline" onClick={syncToBrevo} disabled={isSyncing}>
           {isSyncing ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -126,6 +126,11 @@ export default function LoginPage() {
     e.preventDefault();
     if (isRegistering) return;
     setIsRegistering(true);
+    // GTM: user clicked register submit
+    try {
+      (window as any).dataLayer = (window as any).dataLayer || [];
+      (window as any).dataLayer.push({ event: 'auth_signup_submit' });
+    } catch {}
     if (password !== confirmPassword) {
       toast({
         variant: "destructive",
@@ -156,6 +161,11 @@ export default function LoginPage() {
         description: error.status === 429 ? 'Too many attempts. Please wait a moment and try again.' : error.message,
       });
     } else {
+      // GTM: signup request accepted (email confirmation pending)
+      try {
+        (window as any).dataLayer = (window as any).dataLayer || [];
+        (window as any).dataLayer.push({ event: 'auth_signup_requested' });
+      } catch {}
       toast({
         title: "Registration Successful",
         description: "Please check your email to confirm your account.",

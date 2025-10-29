@@ -90,6 +90,12 @@ export function CasinoCard({ casino, userCasino }: CasinoCardProps) {
 
   const handleActionClick = async () => {
     if (currentStatus === CasinoStatus.CollectedToday || !casino.casino_url) return;
+    // Push GTM events for casino actions
+    try {
+      (window as any).dataLayer = (window as any).dataLayer || [];
+      const evt = currentStatus === CasinoStatus.NotRegistered ? 'casino_register_click' : 'casino_get_bonus_click';
+      (window as any).dataLayer.push({ event: evt, casino_id: casino.id, casino_name: casino.name });
+    } catch {}
     setIsLoading(true);
     try {
         // Pre-open background tab synchronously to keep focus
